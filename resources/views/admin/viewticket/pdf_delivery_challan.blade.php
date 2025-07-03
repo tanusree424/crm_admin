@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Delivery Challan</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .header {
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body style="border: 1px solid #000;">
+    <div class="header">
+        <table style="border: 1px solid #fff;">
+            <tr>  
+                <td style="padding:1px;width:100%; text-align:right;border: 1px solid #fff; font-size:7px;">Original For Consignee/duplicate For Transporter/triplicate For Consignor (For Goods)</td>
+            </tr>
+        </table>
+        <table style="border: 1px solid #fff;">
+            <tr>
+                <td style="padding:1px;width:25%;text-align:left;border: 1px solid #fff;"><img src="{{asset($displaybarCodeImg)}}"></td>    
+                <td style="padding:1px;width:36%;text-align:center;border: 1px solid #fff;"><h2>Delivery Challan</h2></td>
+                <td style="padding:1px;width:39%;text-align:right;border: 1px solid #fff;"></td>
+            </tr>
+        </table>
+        
+    </div>
+
+    <table style="border: 1px solid #000;">
+        <tr style="border: 1px solid #000;">
+            <td style="width:25%;padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;border-left: 1px solid #FFF;vertical-align: top;">GSTIN of Consignor:</td>
+            <td style="width:25%;padding: 1px;border: 1px solid #000; border-bottom: 1px solid #FFF;text-align:left;vertical-align: top;"></td>
+            <td style="width:25%;padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;vertical-align: top;">Transportation Mode:</td>
+            <td style="width:25%;padding: 1px;border: 1px solid #000; border-bottom: 1px solid #FFF;text-align:left;border-right: 1px solid #FFF;vertical-align: top;">.</td>
+        </tr>
+        <tr style="border: 1px solid #000;">
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;border-left: 1px solid #FFF;vertical-align: top;" rowspan="2">Name of Consignor:</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;vertical-align: top;" rowspan="2">Honeywell Replacement<br>center -HO</td>
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;vertical-align: top;">Veh. No:</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;border-right: 1px solid #FFF;vertical-align: top;">.</td>
+        </tr>
+        <tr style="border: 1px solid #000;">
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;vertical-align: top;">Date & Time of Supply:</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;border-right: 1px solid #FFF;vertical-align: top;">.</td>
+        </tr>
+        <tr style="border: 1px solid #000;">
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;border-left: 1px solid #FFF;">Address of Consignor:</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;">Mumbai 400067</td>
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;">Place of Supply:</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;border-right: 1px solid #FFF;"></td>
+        </tr>
+        <tr style="border: 1px solid #000;">
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;border-left: 1px solid #FFF;">Serial No. of Ref. No:</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;"></td>
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;">challan No:</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;border-right: 1px solid #FFF;"></td>
+        </tr>
+        <tr style="border: 1px solid #000;">
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;border-left: 1px solid #FFF;">Date of Ref. No:</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;"></td>
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;">challan Date:</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;border-right: 1px solid #FFF;"></td>
+        </tr>
+        <tr style="border: 1px solid #000;">
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;border-left: 1px solid #FFF;">State:</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;">Maharashtra</td>
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;">Courier Name:</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;border-right: 1px solid #FFF;"></td>
+        </tr>
+        <tr style="border: 1px solid #000;">
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;border-left: 1px solid #FFF;">StateCode:</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;">MH</td>
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;">Docket No:</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;border-right: 1px solid #FFF;"></td>
+        </tr>
+        <tr style="border: 1px solid #000;">
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;border-left: 1px solid #FFF;"></td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;"></td>
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;">Weight:</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;border-right: 1px solid #FFF;"></td>
+        </tr>
+        <tr style="border: 1px solid #000;">
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;text-align:left;border-bottom: 1px solid #000;border-left: 1px solid #FFF;"></td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #000;text-align:left;"></td>
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #000;text-align:left;">Total Qty: </td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #000;text-align:left;border-right: 1px solid #FFF;"></td>
+        </tr>
+        <tr style="border: 1px solid #000;">
+            <td style="width:25%;padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;border-left: 1px solid #FFF;vertical-align: top;"><strong>Bill To:</strong></td>
+            <td style="width:25%;padding: 1px;border: 1px solid #000; border-bottom: 1px solid #FFF;text-align:left;vertical-align: top;"></td>
+            <td style="width:25%;padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;vertical-align: top;"><strong>Ship To:</strong></td>
+            <td style="width:25%;padding: 1px;border: 1px solid #000; border-bottom: 1px solid #FFF;text-align:left;border-right: 1px solid #FFF;vertical-align: top;">.</td>
+        </tr>
+        <tr style="border: 1px solid #000;">
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;border-left: 1px solid #FFF;vertical-align: top;" rowspan="2">Name of Consignee:</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;vertical-align: top;" rowspan="2">Honeywell Replacement<br>center -HO</td>
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;vertical-align: top;">Ticket No :</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;border-right: 1px solid #FFF;vertical-align: top;">{{$data['ticket_id']}}</td>
+        </tr>
+        <tr style="border: 1px solid #000;">
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;vertical-align: top;" rowspan="2">Name of Consignee :</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;border-right: 1px solid #FFF;vertical-align: top;" rowspan="2">
+                {{$data['ticket']->cust->firstname}} {{$data['ticket']->cust->lastname}}
+            </td>
+        </tr>
+        <tr style="border: 1px solid #000;">
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;border-left: 1px solid #FFF;vertical-align: top;">Address of Consignee:</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;">MUMBAI</td>
+        </tr>
+        <tr style="border: 1px solid #000;">
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;border-left: 1px solid #FFF;">GSTIN/Unique ID No. of</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;"></td>
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;vertical-align: top;" rowspan="2">Address of Consignee:</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;border-right: 1px solid #FFF;vertical-align: top;" rowspan="2">
+                @php $customfields = $data['ticket']->ticket_customfield()->get(); $state = ''; $mobile = ''; @endphp
+                @if($customfields->isNotEmpty())
+					@foreach ($customfields as $customfield)
+						@if($customfield->fieldtypes == 'textarea')
+							@if($customfield->privacymode == '1')
+								@php
+									$extrafieldds = decrypt($customfield->values);
+								@endphp
+								{{$extrafieldds}}
+							@else
+                                {{$customfield->values}}
+
+							@endif
+						@endif
+                        @if($customfield->fieldtypes == 'text')
+                            @if($customfield->fieldnames == 'Mobile no.')
+                                @php $mobile = $customfield->values; @endphp
+                            @endif
+                            @if($customfield->fieldnames == 'State')
+                                @php $state = $customfield->values; @endphp
+                            @endif  
+                        @endif        
+					@endforeach
+				@endif
+                Mobile no. {{$mobile}}
+            </td>
+        </tr>
+        <tr style="border: 1px solid #000;">
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;border-left: 1px solid #FFF;">Consignee:</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;"></td>
+        </tr>
+        <tr style="border: 1px solid #000;">
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;border-left: 1px solid #FFF;">State:</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;">Maharashtra</td>
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;">GSTIN/Unique ID No. of</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;border-right: 1px solid #FFF;"></td>
+        </tr>
+        <tr style="border: 1px solid #000;">
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;border-left: 1px solid #FFF;">StateCode:</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;">MH</td>
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;">Consignee:</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;border-right: 1px solid #FFF;"></td>
+        </tr>
+        <tr style="border: 1px solid #000;">
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;border-left: 1px solid #FFF;"></td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;"></td>
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;">State:</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;border-right: 1px solid #FFF;">
+                {{$state}}
+            </td>
+        </tr>
+        <tr style="border: 1px solid #000;">
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;text-align:left;border-bottom: 1px solid #FFF;border-left: 1px solid #FFF;"></td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;"></td>
+            <td style="padding: 1px;border: 1px solid #000;border-right: 1px solid #FFF;border-bottom: 1px solid #FFF;text-align:left;">StateCode:</td>
+            <td style="padding: 1px;border: 1px solid #000;border-bottom: 1px solid #FFF;text-align:left;border-right: 1px solid #FFF;"></td>
+        </tr>
+    </table>
+
+    <table style="width:100%; font-size:8px;">
+        <tr>
+            <th rowspan="2" style="border-left: 1px solid #000;">Sr. No.</th>
+            <th rowspan="2" >Description of goods/service</th>
+            <th rowspan="2">HSN code of Goods/service</th>
+            <th rowspan="2">Qty.</th>
+            <th rowspan="2">Unit/Unique Quantity Code</th>
+            <th rowspan="2">Rate (per item)</th>
+            <th rowspan="2">Total</th>
+            <th rowspan="2">Discount</th>
+            <th rowspan="2">Taxable value</th>
+            <th colspan="2">SGST</th>
+            <th colspan="2">CGST</th>
+            <th colspan="2" style="border-right: 1px solid #000;">IGST</th>
+        </tr>
+        <tr>
+            <th style="border-left: 1px solid #000;">Rate</th>
+            <th>Amt.</th>
+            <th>Rate</th>
+            <th>Amt.</th>
+            <th>Rate</th>
+            <th style="border-right: 1px solid #000;">Amt.</th>
+        </tr>
+        @php $k = 1; @endphp
+        @foreach ($data['products'] as $product)
+            <tr>
+                <td style="border-left: 1px solid #000;">{{$k}}</td>
+                <td style="word-wrap: break-word; white-space: normal;width:20%;font-size:7px;">{{ $product->brand }} {{ $product->product_type }} {{ $product->material }} </td>
+                <td></td>
+                <td>{{ $product->quantity }}</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td style="border-right: 1px solid #000;"></td>
+            </tr>
+            @php $k++; @endphp
+        @endforeach 
+        <tr style="font-size:9px;">
+            <td colspan="5" style="text-align:left; border-left: 1px solid #000;">Invoice Value (In words)</td>
+            <td colspan="7" style="text-align:right;">Total</td>
+            <td colspan="3" style="text-align:right; border-right: 1px solid #000;"></td>
+        </tr>
+        <tr style="font-size:9px;">
+            <td colspan="5" style="text-align:left; border-left: 1px solid #000;"><strong>three hundred eighty one (Round Off)</strong></td>
+            <td colspan="7" style="text-align:right;">Amount Of Tax</td>
+            <td colspan="3" style="text-align:right;border-right: 1px solid #000;"></td>
+        </tr>
+        <tr style="font-size:9px;">
+            <td colspan="5" style="border-left: 1px solid #000;"></td>
+            <td colspan="7" style="text-align:right;">Freight Charges</td>
+            <td colspan="3" style="text-align:right;border-right: 1px solid #000;"></td>
+        </tr>
+        <tr style="font-size:9px;">
+            <td colspan="5" style="border-left: 1px solid #000;"></td>
+            <td colspan="7" style="text-align:right;">Loading and Packing Charges</td>
+            <td colspan="3" style="text-align:right;border-right: 1px solid #000;"></td>
+        </tr>
+        <tr style="font-size:9px;">
+            <td colspan="5" style="border-left: 1px solid #000;"></td>
+            <td colspan="7" style="text-align:right;">Insurance charges</td>
+            <td colspan="3" style="text-align:right;border-right: 1px solid #000;"></td>
+        </tr>
+        <tr style="font-size:9px;">
+            <td colspan="5" style="border-left: 1px solid #000;"></td>
+            <td colspan="7" style="text-align:right;">Other Charges</td>
+            <td colspan="3" style="text-align:right;border-right: 1px solid #000;"></td>
+        </tr>
+        <tr style="font-size:9px;">
+            <td colspan="5" style="border-left: 1px solid #000;"></td>
+            <td colspan="7" style="text-align:right;">Invoice Total</td>
+            <td colspan="3" style="text-align:right;border-right: 1px solid #000;"></td>
+        </tr>
+    </table>
+
+    <h4>Terms And Conditions</h4><br>
+
+    <table style="padding-left:0px;">   
+        <tr style="padding-left:0px;">
+            <td style="border: 1px solid #FFF; width:70%;text-align:left;padding-left:0px;text-align: left;">Certified that the particulars given above are true & Correct</td>
+        <tr> 
+        <tr style="padding-left:0px;">
+            <td style="border: 1px solid #FFF; text-align: right;">Signature Supplier/Authorised Signatory</td>
+        <tr>
+    </table>
+    
+    <div style="text-align:center;">Not for Sale, Only for Replacement under Warranty</div>
+</body>
+</html>
