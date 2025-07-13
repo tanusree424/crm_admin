@@ -4,27 +4,27 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Auth;
-use File;
+use Illuminate\Support\Facades\File;
 
 class ImageController extends Controller
 {
-    public function index($id, $image)
-    {
+public function index($id, $image)
+{
+    $image = urldecode($image); // Important to decode
+   // dd($image);
+    $path = public_path("media/{$id}/{$image}");
+   // dd($path);
 
-        $profile_path = public_path('media/'.$id. '/'. $image);
-        if(File::exists($profile_path)){
-            if (Auth::check() && Auth::user() || Auth::guard('customer')->check() && Auth::guard('customer')->user()) {
-
-                return response()->file($profile_path);
-            } else {
-                abort(404);
-            }
+    if (File::exists($path)) {
+        if (Auth::check() || Auth::guard('customer')->check()) {
+            return response()->file($path);
         }
-        else {
-            abort(404);
-        }
-
+        abort(403, 'Unauthorized');
     }
+
+    abort(404, 'File Not Found');
+}
+
 
     public function imagedownload($id, $image)
     {

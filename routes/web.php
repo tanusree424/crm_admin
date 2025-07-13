@@ -18,6 +18,7 @@ use App\Http\Controllers\User\DashboardController;
 use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Admin\TicketMaterialStatusUpadteController;
 use App\Http\Controllers\Admin\TicketProductController;
+use App\Http\Controllers\User\TicketReportController;
 
 
 
@@ -495,6 +496,10 @@ Route::middleware(ProtectAgainstSpam::class)->group(function () {
 			Route::get('/ticket-view/ticketassigneds/{id}', 'AdminAssignedticketsController@show');
 			Route::get('dashboardtabledata', 'AdminDashboardController@dashboardtabledata')->name('admin.dashboardtabledata');
 			Route::get('itemsdata', 'AdminDashboardController@getData')->name('admin.data');
+            Route::get('mail-to-ticket', 'AdminDashboardController@mailToTicket')->name('admin.mailtotickets.data');
+            Route::post('mailtotickets/move', 'AdminDashboardController@moveToDashboard')->name('admin.mailtotickets.move');
+            Route::post('save-followup',[AdminDashboardController::class,'saveFollowup'])->name('admin.saveFollowup');
+
 			Route::get('allticketsdata', 'AdminDashboardController@allticketsdata')->name('admin.allticketsdata');
 			Route::get('recentticketsdata', 'AdminDashboardController@recentticketsdata')->name('admin.recentticketsdata');
 			Route::get('allcustomerdata', 'AdminprofileController@allcustomerdata')->name('admin.allcustomerdata');
@@ -595,7 +600,9 @@ Route::post('/ticket-products/save', [TicketProductController::class, 'save'])->
 					Route::get('/generalsetting', 'GeneralSettingController@index')->name('client.general');
 					Route::post('/general/notification', 'GeneralSettingController@NotifyOn')->name('client.generalsetting');
 					Route::get('/notification', 'DashboardController@notify')->name('client.notification');
-
+                    Route::get('/ticket-report','TicketReportController@index')->name('ticket.report');
+                    Route::get('user/ticket-category-export', [TicketReportController::class, 'exportByCategory'])
+    ->name('ticket.export.category');
 					Route::get('/markAsRead', function () {
 
 						$notify = Auth::guard('customer')->user();

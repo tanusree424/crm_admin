@@ -24,6 +24,10 @@ use Session;
 use Illuminate\Support\Str;
 use Artisan;
 use App\Models\ticketassignchild;
+use Illuminate\Support\Facades\Mail;
+
+
+use App\Mail\FollowupMail;
 
 
 class AdminDashboardController extends Controller
@@ -307,333 +311,289 @@ class AdminDashboardController extends Controller
 
     public function getData(Request $request)
     {
-        $query = Ticket::select('tickets.*',"groups_categories.group_id","groups_users.users_id", "ticket_customfields.values")
-        ->leftJoin('groups_categories','groups_categories.category_id','tickets.category_id')
-        ->leftJoin('customers','customers.id','tickets.cust_id')
-        ->leftJoin('ticket_customfields', function ($join) {
-            $join->on('ticket_customfields.ticket_id', '=', 'tickets.id')
-                 ->where('ticket_customfields.fieldnames', '=', 'Mobile no.');
-        })
-        ->leftJoin('groups_users','groups_users.groups_id','groups_categories.group_id')
-        ->whereIn('tickets.status', ['New'])
-        ->whereNull('tickets.myassignuser_id')
-        ->whereNull('tickets.selfassignuser_id')
-        ->whereNull('groups_users.users_id')
-        ->latest('tickets.updated_at');
-        
-        if ($request->has('search') && !empty($request->search)) {
-            $searchValue = '%' . $request->search['value'] . '%';
-            $query->where(function ($q) use ($searchValue) {
-                $q->where('tickets.subject', 'like', $searchValue)
-                ->orWhere('ticket_customfields.values', 'like', $searchValue)
-                ->orWhere('tickets.ticket_id', 'like', $searchValue)
-                ->orWhere (function ($qs) use ($searchValue) {
-                    $qs->where('customers.firstname', 'like', $searchValue)
-                        ->orWhere('customers.lastname', 'like', $searchValue);
-                });
-            });
-        }
-
-        $query->get();
-
-        return DataTables::of($query)
-            ->addColumn('serial', function ($row) {
-                return '';
-            })
-            ->addColumn('id', function ($row) {
-                $html = '<a href="admin/ticket-view/' . $row->ticket_id .'" class="fs-14 d-block font-weight-semibold">' .$row->subject . '</a>
-                <ul class="fs-13 font-weight-normal d-flex custom-ul">
-                    <li class="pe-2 text-muted">#' . $row->ticket_id .'</span>
-                    <li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Date').'"><i class="fe fe-calendar me-1 fs-14"></i> '.$row->created_at->timezone(Auth::user()->timezone)->format(setting('date_format')).'</li>';
-                
-                    if($row->priority != null)
-                        if($row->priority == "Low")
-                            $html .= '<li class="ps-5 pe-2 preference preference-low" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Priority') .'">'.lang($row->priority) .'</li>';
-
-                        elseif($row->priority == "High")
-                            $html .= '<li class="ps-5 pe-2 preference preference-high" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Priority') .'">'.lang($row->priority) .'</li>';
-
-                        elseif($row->priority == "Critical")
-                             $html .= '<li class="ps-5 pe-2 preference preference-critical" data-bs-toggle="tooltip" data-bs-placement="top" title="' .lang('Priority') . '"> '.lang($row->priority) . '</li>';
-
-                        else
-                            $html .= '<li class="ps-5 pe-2 preference preference-medium" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Priority') .'">' .lang($row->priority) .'</li>';
-                    else
-                        $html .= '~';
-
-                    if($row->category_id != null)
-                        if($row->category != null)
-                            $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Category') .'"><i class="fe fe-grid me-1 fs-14" ></i>'.Str::limit($row->category->name, '40') .'</li>';
-                        else
-                            $html .= '~';
-                    else
-                        $html .= '~';
-
-                    if($row->last_reply == null)    
-                        $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'. lang('Last Replied') .'"><i class="fe fe-clock me-1 fs-14"></i>' . $row->created_at->diffForHumans() .'</li>';
-                    else
-                        $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Last Replied') .'"><i class="fe fe-clock me-1 fs-14"></i>' .$row->last_reply->diffForHumans() .'</li>';
-
-                    if($row->purchasecodesupport != null)
-                        if($row->purchasecodesupport == 'Supported')
-                            $html .= '<li class="px-2 text-success font-weight-semibold">' . lang('Support Active') .'</li>';
-
-                        if($row->purchasecodesupport == 'Expired')
-                            $html .= '<li class="px-2 text-danger-dark font-weight-semibold">' .lang('Support Expired') .'</li>';
-
-                $html .= '</ul>';
-                return $html;
-            })
-            ->addColumn('custname', function ($row) {
-                return $row->cust->username . ' (' . lang($row->cust->userType) . ')';
-            })
-            ->addColumn('mobilenumber', function ($row) {
-                $mobileNo = $row->values;
-                return $mobileNo;
-            })
-            ->addColumn('status', function ($row) {
-                $status = '';
-                if($row->status == "New")
-                    $status = '<span class="badge badge-burnt-orange">' .lang($row->status) .'</span>';
-
-                elseif($row->status == "Re-Open") 
-                    $status = '<span class="badge badge-teal">' . lang($row->status) .'</span>';
-
-                elseif($row->status == "Inprogress")
-                    $status = '<span class="badge badge-info">' . lang($row->status) .'</span>';
-
-                elseif($row->status == "On-Hold")
-                    $status = '<span class="badge badge-warning">' . lang($row->status) .'</span>';
-
-                else
-                    $status = '<span class="badge badge-danger">' . lang($row->status) .'</span>';
-
-                return $status;
-            })
-            ->addColumn('assignedTo', function ($row) {
-                $assignedTo = '';
-                if(Auth::user()->can('Ticket Assign')){
-                    if($row->status == 'Suspend' || $row->status == 'Closed'){
-                        $assignedTo .= '<div class="btn-group">';
-                            if($row->ticketassignmutliples->isNotEmpty() && $row->selfassignuser_id == null){
-                                $assignedTo .= '<button class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" disabled>'.lang('Multi Assign') .' <span class="caret"></span></button>';
-                                $assignedTo .= '<button data-id="' .$row->id .'" class="btn btn-outline-primary" id="btnremove" disabled data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-original-title="'.lang('Unassign') .'" aria-label="Unassign"><i class="fe fe-x"></i></button>';
-                            }elseif($row->ticketassignmutliples->isEmpty() && $row->selfassignuser_id != null){
-                                $assignedTo .= '<button class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown"  disabled>{{$row->selfassign->name}} (self) <span class="caret"></span></button>';
-                                $assignedTo .= '<button data-id="'.$row->id.'" class="btn btn-outline-primary" id="btnremove" disabled data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-original-title="'.lang('Unassign').'" aria-label="Unassign"><i class="fe fe-x"></i></button>';
-                            }else{
-                                $assignedTo .= '<button class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown"  disabled>'.lang('Assign').'<span class="caret"></span></button>';
-                            }
-                        $assignedTo .= '</div>';
-                    }else{
-                        if($row->ticketassignmutliples->isEmpty() && $row->selfassignuser_id == null){
-                            $assignedTo .= '<div class="btn-group">';
-                            $assignedTo .= '<button class="btn btn-outline-primary dropdown-toggle btn-sm" data-bs-toggle="dropdown">'.lang('Assign').' <span class="caret"></span></button>
-                                <ul class="dropdown-menu" role="menu">
-                                    <li class="dropdown-plus-title">'.lang('Assign').' <b aria-hidden="true" class="fa fa-angle-up"></b></li>
-                                    <li>
-                                        <a href="javascript:void(0);" id="selfassigid" data-id="'.$row->id.'">'.lang('Self Assign').'</a>
-                                    </li>
-                                    <li>
-                                        <a href="javascript:void(0)" data-id="'.$row->id.'" id="assigned">
-                                        '.lang('Other Assign').'
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>'; 
-                        }else{
-                             $assignedTo .= '<div class="btn-group">';
-                                if($row->ticketassignmutliples->isNotEmpty() && $row->selfassignuser_id == null){
-                                    if($row->ticketassignmutliples->isEmpty() && $row->selfassign == null){
-                                        $assignedTo .= '<button class="btn btn-outline-primary dropdown-toggle btn-sm" data-bs-toggle="dropdown">'.lang('Assign') .'<span class="caret"></span></button>';
-                                    }else{
-                                        $assignedTo .= '<button class="btn btn-outline-primary dropdown-toggle btn-sm" data-bs-toggle="dropdown">'.lang('Multi Assign') .'<span class="caret"></span></button>';
-                                        $assignedTo .= '<a href="javascript:void(0)" data-id="'.$row->id .'" class="btn btn-outline-primary btn-sm" id="btnremove" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-original-title="'.lang('Unassign') .'" aria-label="Unassign"><i class="fe fe-x"></i></a>';
-                                    }
-                                }elseif($row->ticketassignmutliples->isEmpty() && $row->selfassignuser_id != null){
-                                    if($row->ticketassignmutliples->isEmpty() && $row->selfassign == null){
-                                        $assignedTo .= '<button class="btn btn-outline-primary dropdown-toggle btn-sm" data-bs-toggle="dropdown">'.lang('Assign') .' <span class="caret"></span></button>';
-                                    }else{
-                                        $assignedTo .= '<button class="btn btn-outline-primary dropdown-toggle btn-sm" data-bs-toggle="dropdown">'.$row->selfassign->name .' (self) <span class="caret"></span></button>
-                                        <a href="javascript:void(0)" data-id="' .$row->id .'" class="btn btn-outline-primary btn-sm" id="btnremove" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-original-title="' .lang('Unassign') .'" aria-label="Unassign"><i class="fe fe-x"></i></a>';
-                                    }
-                                }else{
-                                    $assignedTo .= '<button class="btn btn-outline-primary dropdown-toggle btn-sm" data-bs-toggle="dropdown">' . lang('Assign') .' <span class="caret"></span></button>';
-                                }
-
-                               $assignedTo .= '<ul class="dropdown-menu" role="menu">
-                                    <li class="dropdown-plus-title">' .lang('Assign') .' <b aria-hidden="true" class="fa fa-angle-up"></b></li>
-                                    <li>
-                                        <a href="javascript:void(0);" id="selfassigid" data-id="' .$row->id .'">'.lang('Self Assign') .'</a>
-                                    </li>
-                                    <li>
-                                        <a href="javascript:void(0)" data-id="'.$row->id.'" id="assigned">
-                                        '.lang('Other Assign').'
-                                        </a>
-                                    </li>
-                                </ul>';
-                            $assignedTo .= '</div>';
-                        }       
-                    }
-                }
-
-                return $assignedTo;
-            })
-            ->addColumn('action', function ($row) {
-                $action = '';
-                if(Auth::user()->can('Ticket Edit')){
-                    $action .= '<a href="' . url('admin/ticket-view/' . $row->ticket_id) .'" class="btn btn-sm action-btns edit-testimonial"><i class="feather feather-eye text-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Edit').'"></i></a>';
-                }else{
-                    $action .= '~';
-                }
-                if(Auth::user()->can('Ticket Delete')){
-                    $action .= '<a href="javascript:void(0)" data-id="'.$row->id .'" class="btn btn-sm action-btns" id="show-delete" ><i class="feather feather-trash-2 text-danger" data-id="'.$row->id.'" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Delete') .'"></i></a>';
-                }else{
-                    $action .= '~';
-                }
-                
-                return $action;
-            })
-            ->rawColumns(['serial', 'id' ,'custname', 'mobilenumber', 'status', 'assignedTo','action'])// Ensure HTML is rendered as raw HTML
-            ->make(true);
-    }
-
-    public function allticketsdata(Request $request)
-    {
-
-        if(Auth::user()->dashboard == 'Admin'){
-            $query = Ticket::select('tickets.*',"groups_categories.group_id","groups_users.users_id", "ticket_customfields.values")
-            ->leftJoin('groups_categories','groups_categories.category_id','tickets.category_id')
-            ->leftJoin('customers','customers.id','tickets.cust_id')
-            ->leftJoin('ticket_customfields', function ($join) {
-                $join->on('ticket_customfields.ticket_id', '=', 'tickets.id')
-                     ->where('ticket_customfields.fieldnames', '=', 'Mobile no.');
-            })
-            ->leftJoin('groups_users','groups_users.groups_id','groups_categories.group_id')
-            ->latest('tickets.updated_at');
-        }else if(Auth::user()->dashboard == 'Employee' || Auth::user()->dashboard == null){
-            $groupexists = Groupsusers::where('users_id', Auth::id())->exists();
-            if($groupexists){
                 $query = Ticket::select('tickets.*',"groups_categories.group_id","groups_users.users_id", "ticket_customfields.values")
                 ->leftJoin('groups_categories','groups_categories.category_id','tickets.category_id')
-                ->leftJoin('ticketassignchildren', 'tickets.id', 'ticketassignchildren.ticket_id')
                 ->leftJoin('customers','customers.id','tickets.cust_id')
                 ->leftJoin('ticket_customfields', function ($join) {
                     $join->on('ticket_customfields.ticket_id', '=', 'tickets.id')
                         ->where('ticket_customfields.fieldnames', '=', 'Mobile no.');
                 })
                 ->leftJoin('groups_users','groups_users.groups_id','groups_categories.group_id')
+                ->whereIn('tickets.status', ['New'])
+                ->whereNull('tickets.myassignuser_id')
+                ->whereNull('tickets.selfassignuser_id')
+                ->whereNull('groups_users.users_id')
+                ->latest('tickets.updated_at');
+            // For searching Accoring to value 11-07-2025
+                    if ($request->has('search') && !empty($request->search['value'])) {
+                    $searchValue = '%' . $request->search['value'] . '%';
+
+                    $query->where(function ($q) use ($searchValue) {
+                        $q->where('tickets.subject', 'like', $searchValue)
+                        ->orWhere('ticket_customfields.values', 'like', $searchValue) // ✅ this is mobile
+                        ->orWhere('tickets.ticket_id', 'like', $searchValue)
+                        ->orWhere('customers.username', 'like', $searchValue)
+                        ->orWhere('customers.firstname', 'like', $searchValue)
+                        ->orWhere('customers.lastname', 'like', $searchValue);
+                    });
+                    }
+        // End
+
+                $query->get();
+
+                return DataTables::of($query)
+                    ->addColumn('serial', function ($row) {
+                        return '';
+                    })
+                    ->addColumn('id', function ($row) {
+                        $html = '<a href="admin/ticket-view/' . $row->ticket_id .'" class="fs-14 d-block font-weight-semibold">' .$row->subject . '</a>
+                        <ul class="fs-13 font-weight-normal d-flex custom-ul">
+                            <li class="pe-2 text-muted">#' . $row->ticket_id .'</span>
+                            <li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Date').'"><i class="fe fe-calendar me-1 fs-14"></i> '.$row->created_at->timezone(Auth::user()->timezone)->format(setting('date_format')).'</li>';
+
+                            if($row->priority != null)
+                                if($row->priority == "Low")
+                                    $html .= '<li class="ps-5 pe-2 preference preference-low" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Priority') .'">'.lang($row->priority) .'</li>';
+
+                                elseif($row->priority == "High")
+                                    $html .= '<li class="ps-5 pe-2 preference preference-high" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Priority') .'">'.lang($row->priority) .'</li>';
+
+                                elseif($row->priority == "Critical")
+                                    $html .= '<li class="ps-5 pe-2 preference preference-critical" data-bs-toggle="tooltip" data-bs-placement="top" title="' .lang('Priority') . '"> '.lang($row->priority) . '</li>';
+
+                                else
+                                    $html .= '<li class="ps-5 pe-2 preference preference-medium" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Priority') .'">' .lang($row->priority) .'</li>';
+                            else
+                                $html .= '~';
+
+                            if($row->category_id != null)
+                                if($row->category != null)
+                                    $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Category') .'"><i class="fe fe-grid me-1 fs-14" ></i>'.Str::limit($row->category->name, '40') .'</li>';
+                                else
+                                    $html .= '~';
+                            else
+                                $html .= '~';
+
+                            if($row->last_reply == null)
+                                $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'. lang('Last Replied') .'"><i class="fe fe-clock me-1 fs-14"></i>' . $row->created_at->diffForHumans() .'</li>';
+                            else
+                                $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Last Replied') .'"><i class="fe fe-clock me-1 fs-14"></i>' .$row->last_reply->diffForHumans() .'</li>';
+
+                            if($row->purchasecodesupport != null)
+                                if($row->purchasecodesupport == 'Supported')
+                                    $html .= '<li class="px-2 text-success font-weight-semibold">' . lang('Support Active') .'</li>';
+
+                                if($row->purchasecodesupport == 'Expired')
+                                    $html .= '<li class="px-2 text-danger-dark font-weight-semibold">' .lang('Support Expired') .'</li>';
+
+                        $html .= '</ul>';
+                        return $html;
+                    })
+                    ->addColumn('custname', function ($row) {
+                        return $row->cust->username . ' (' . lang($row->cust->userType) . ')';
+                    })
+                    ->addColumn('mobilenumber', function ($row) {
+                        $mobileNo = $row->values;
+                        return $mobileNo;
+                    })
+                    ->addColumn('status', function ($row) {
+                        $status = '';
+                        if($row->status == "New")
+                            $status = '<span class="badge badge-burnt-orange">' .lang($row->status) .'</span>';
+
+                        elseif($row->status == "Re-Open")
+                            $status = '<span class="badge badge-teal">' . lang($row->status) .'</span>';
+
+                        elseif($row->status == "Inprogress")
+                            $status = '<span class="badge badge-info">' . lang($row->status) .'</span>';
+
+                        elseif($row->status == "On-Hold")
+                            $status = '<span class="badge badge-warning">' . lang($row->status) .'</span>';
+
+                        else
+                            $status = '<span class="badge badge-danger">' . lang($row->status) .'</span>';
+
+                        return $status;
+                    })
+                    ->addColumn('assignedTo', function ($row) {
+                        $assignedTo = '';
+                        if(Auth::user()->can('Ticket Assign')){
+                            if($row->status == 'Suspend' || $row->status == 'Closed'){
+                                $assignedTo .= '<div class="btn-group">';
+                                    if($row->ticketassignmutliples->isNotEmpty() && $row->selfassignuser_id == null){
+                                        $assignedTo .= '<button class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" disabled>'.lang('Multi Assign') .' <span class="caret"></span></button>';
+                                        $assignedTo .= '<button data-id="' .$row->id .'" class="btn btn-outline-primary" id="btnremove" disabled data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-original-title="'.lang('Unassign') .'" aria-label="Unassign"><i class="fe fe-x"></i></button>';
+                                    }elseif($row->ticketassignmutliples->isEmpty() && $row->selfassignuser_id != null){
+                                        $assignedTo .= '<button class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown"  disabled>{{$row->selfassign->name}} (self) <span class="caret"></span></button>';
+                                        $assignedTo .= '<button data-id="'.$row->id.'" class="btn btn-outline-primary" id="btnremove" disabled data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-original-title="'.lang('Unassign').'" aria-label="Unassign"><i class="fe fe-x"></i></button>';
+                                    }else{
+                                        $assignedTo .= '<button class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown"  disabled>'.lang('Assign').'<span class="caret"></span></button>';
+                                    }
+                                $assignedTo .= '</div>';
+                            }else{
+                                if($row->ticketassignmutliples->isEmpty() && $row->selfassignuser_id == null){
+                                    $assignedTo .= '<div class="btn-group">';
+                                    $assignedTo .= '<button class="btn btn-outline-primary dropdown-toggle btn-sm" data-bs-toggle="dropdown">'.lang('Assign').' <span class="caret"></span></button>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li class="dropdown-plus-title">'.lang('Assign').' <b aria-hidden="true" class="fa fa-angle-up"></b></li>
+                                            <li>
+                                                <a href="javascript:void(0);" id="selfassigid" data-id="'.$row->id.'">'.lang('Self Assign').'</a>
+                                            </li>
+                                            <li>
+                                                <a href="javascript:void(0)" data-id="'.$row->id.'" id="assigned">
+                                                '.lang('Other Assign').'
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>';
+                                }else{
+                                    $assignedTo .= '<div class="btn-group">';
+                                        if($row->ticketassignmutliples->isNotEmpty() && $row->selfassignuser_id == null){
+                                            if($row->ticketassignmutliples->isEmpty() && $row->selfassign == null){
+                                                $assignedTo .= '<button class="btn btn-outline-primary dropdown-toggle btn-sm" data-bs-toggle="dropdown">'.lang('Assign') .'<span class="caret"></span></button>';
+                                            }else{
+                                                $assignedTo .= '<button class="btn btn-outline-primary dropdown-toggle btn-sm" data-bs-toggle="dropdown">'.lang('Multi Assign') .'<span class="caret"></span></button>';
+                                                $assignedTo .= '<a href="javascript:void(0)" data-id="'.$row->id .'" class="btn btn-outline-primary btn-sm" id="btnremove" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-original-title="'.lang('Unassign') .'" aria-label="Unassign"><i class="fe fe-x"></i></a>';
+                                            }
+                                        }elseif($row->ticketassignmutliples->isEmpty() && $row->selfassignuser_id != null){
+                                            if($row->ticketassignmutliples->isEmpty() && $row->selfassign == null){
+                                                $assignedTo .= '<button class="btn btn-outline-primary dropdown-toggle btn-sm" data-bs-toggle="dropdown">'.lang('Assign') .' <span class="caret"></span></button>';
+                                            }else{
+                                                $assignedTo .= '<button class="btn btn-outline-primary dropdown-toggle btn-sm" data-bs-toggle="dropdown">'.$row->selfassign->name .' (self) <span class="caret"></span></button>
+                                                <a href="javascript:void(0)" data-id="' .$row->id .'" class="btn btn-outline-primary btn-sm" id="btnremove" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-bs-original-title="' .lang('Unassign') .'" aria-label="Unassign"><i class="fe fe-x"></i></a>';
+                                            }
+                                        }else{
+                                            $assignedTo .= '<button class="btn btn-outline-primary dropdown-toggle btn-sm" data-bs-toggle="dropdown">' . lang('Assign') .' <span class="caret"></span></button>';
+                                        }
+
+                                    $assignedTo .= '<ul class="dropdown-menu" role="menu">
+                                            <li class="dropdown-plus-title">' .lang('Assign') .' <b aria-hidden="true" class="fa fa-angle-up"></b></li>
+                                            <li>
+                                                <a href="javascript:void(0);" id="selfassigid" data-id="' .$row->id .'">'.lang('Self Assign') .'</a>
+                                            </li>
+                                            <li>
+                                                <a href="javascript:void(0)" data-id="'.$row->id.'" id="assigned">
+                                                '.lang('Other Assign').'
+                                                </a>
+                                            </li>
+                                        </ul>';
+                                    $assignedTo .= '</div>';
+                                }
+                            }
+                        }
+
+                        return $assignedTo;
+                    })
+                    ->addColumn('action', function ($row) {
+                        $action = '';
+                        if(Auth::user()->can('Ticket Edit')){
+                            $action .= '<a href="' . url('admin/ticket-view/' . $row->ticket_id) .'" class="btn btn-sm action-btns edit-testimonial"><i class="feather feather-eye text-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Edit').'"></i></a>';
+                        }else{
+                            $action .= '~';
+                        }
+                        if(Auth::user()->can('Ticket Delete')){
+                            $action .= '<a href="javascript:void(0)" data-id="'.$row->id .'" class="btn btn-sm action-btns" id="show-delete" ><i class="feather feather-trash-2 text-danger" data-id="'.$row->id.'" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Delete') .'"></i></a>';
+                        }else{
+                            $action .= '~';
+                        }
+
+                        return $action;
+                    })
+                    ->rawColumns(['serial', 'id' ,'custname', 'mobilenumber', 'status', 'assignedTo','action'])// Ensure HTML is rendered as raw HTML
+                    ->make(true);
+    }
+
+public function allticketsdata(Request $request)
+{
+    if (Auth::user()->dashboard == 'Admin') {
+        $query = Ticket::select('tickets.*', 'groups_categories.group_id', 'groups_users.users_id', 'ticket_customfields.values')
+            ->leftJoin('groups_categories', 'groups_categories.category_id', 'tickets.category_id')
+            ->leftJoin('customers', 'customers.id', 'tickets.cust_id')
+            ->leftJoin('ticket_customfields', function ($join) {
+                $join->on('ticket_customfields.ticket_id', '=', 'tickets.id')
+                    ->where('ticket_customfields.fieldnames', '=', 'Mobile no.');
+            })
+            ->leftJoin('groups_users', 'groups_users.groups_id', 'groups_categories.group_id')
+            ->whereNull('tickets.emailticketfile')
+            ->latest('tickets.updated_at');
+    } elseif (Auth::user()->dashboard === 'Employee' || Auth::user()->dashboard === null) {
+        $groupexists = Groupsusers::where('users_id', Auth::id())->exists();
+
+        if ($groupexists) {
+            $query = Ticket::select('tickets.*', 'groups_categories.group_id', 'groups_users.users_id', 'ticket_customfields.values')
+                ->leftJoin('groups_categories', 'groups_categories.category_id', 'tickets.category_id')
+                ->leftJoin('ticketassignchildren', 'tickets.id', 'ticketassignchildren.ticket_id')
+                ->leftJoin('customers', 'customers.id', 'tickets.cust_id')
+                ->leftJoin('ticket_customfields', function ($join) {
+                    $join->on('ticket_customfields.ticket_id', '=', 'tickets.id')
+                        ->where('ticket_customfields.fieldnames', '=', 'Mobile no.');
+                })
+                ->leftJoin('groups_users', 'groups_users.groups_id', 'groups_categories.group_id')
                 ->whereNotNull('groups_users.users_id')
                 ->where('ticketassignchildren.toassignUser_id', Auth::id())
                 ->where('groups_users.users_id', Auth::id())
+                ->whereNull('tickets.emailticketfile')
                 ->latest('tickets.updated_at');
-            }
-            else{
-                $query = Ticket::select('tickets.*',"groups_categories.group_id","groups_users.users_id", "ticket_customfields.values")
-                    ->leftJoin('groups_categories','groups_categories.category_id','tickets.category_id')
-                    ->leftJoin('ticketassignchildren', 'tickets.id', 'ticketassignchildren.ticket_id')
-                    ->leftJoin('customers','customers.id','tickets.cust_id')
-                    ->leftJoin('ticket_customfields', function ($join) {
-                        $join->on('ticket_customfields.ticket_id', '=', 'tickets.id')
-                            ->where('ticket_customfields.fieldnames', '=', 'Mobile no.');
-                    })
-                    ->leftJoin('groups_users','groups_users.groups_id','groups_categories.group_id')
-                    ->whereNull('groups_users.users_id')
-                    ->where('ticketassignchildren.toassignUser_id', Auth::id())
-                    ->latest('tickets.updated_at');
-            }
+        } else {
+            $query = Ticket::select('tickets.*', 'groups_categories.group_id', 'groups_users.users_id', 'ticket_customfields.values')
+                ->leftJoin('groups_categories', 'groups_categories.category_id', 'tickets.category_id')
+                ->leftJoin('ticketassignchildren', 'tickets.id', 'ticketassignchildren.ticket_id')
+                ->leftJoin('customers', 'customers.id', 'tickets.cust_id')
+                ->leftJoin('ticket_customfields', function ($join) {
+                    $join->on('ticket_customfields.ticket_id', '=', 'tickets.id')
+                        ->where('ticket_customfields.fieldnames', '=', 'Mobile no.');
+                })
+                ->leftJoin('groups_users', 'groups_users.groups_id', 'groups_categories.group_id')
+                ->whereNull('groups_users.users_id')
+                ->where('ticketassignchildren.toassignUser_id', Auth::id())
+                ->whereNull('tickets.emailticketfile')
+                ->latest('tickets.updated_at');
         }
-        
-        if ($request->has('search') && !empty($request->search)) {
-            $searchValue = '%' . $request->search['value'] . '%';
-            $query->where(function ($q) use ($searchValue) {
-                $q->where('tickets.subject', 'like', $searchValue)
+    }
+
+    if ($request->has('search') && !empty($request->search['value'])) {
+        $searchValue = '%' . $request->search['value'] . '%';
+        $query->where(function ($q) use ($searchValue) {
+            $q->where('tickets.subject', 'like', $searchValue)
                 ->orWhere('ticket_customfields.values', 'like', $searchValue)
                 ->orWhere('tickets.ticket_id', 'like', $searchValue)
-                ->orWhere (function ($qs) use ($searchValue) {
-                    $qs->where('customers.firstname', 'like', $searchValue)
-                        ->orWhere('customers.lastname', 'like', $searchValue);
+                ->orWhereHas('cust', function ($qs) use ($searchValue) {
+                    $qs->where('firstname', 'like', $searchValue)
+                        ->orWhere('lastname', 'like', $searchValue);
                 });
-            });
-        }
+        });
+    }
 
-        $query->get();
-
-        return DataTables::of($query)
-            ->addColumn('serial', function ($row) {
-                return '';
-            })
-            ->addColumn('id', function ($row) {
-                $html = '<a href="' . url('admin/ticket-view/' . $row->ticket_id) .'" class="fs-14 d-block font-weight-semibold">' .$row->subject . '</a>
-                <ul class="fs-13 font-weight-normal d-flex custom-ul">
-                    <li class="pe-2 text-muted">#' . $row->ticket_id .'</span>
-                    <li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Date').'"><i class="fe fe-calendar me-1 fs-14"></i> '.$row->created_at->timezone(Auth::user()->timezone)->format(setting('date_format')).'</li>';
-                
-                    if($row->priority != null)
-                        if($row->priority == "Low")
-                            $html .= '<li class="ps-5 pe-2 preference preference-low" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Priority') .'">'.lang($row->priority) .'</li>';
-
-                        elseif($row->priority == "High")
-                            $html .= '<li class="ps-5 pe-2 preference preference-high" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Priority') .'">'.lang($row->priority) .'</li>';
-
-                        elseif($row->priority == "Critical")
-                             $html .= '<li class="ps-5 pe-2 preference preference-critical" data-bs-toggle="tooltip" data-bs-placement="top" title="' .lang('Priority') . '"> '.lang($row->priority) . '</li>';
-
-                        else
-                            $html .= '<li class="ps-5 pe-2 preference preference-medium" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Priority') .'">' .lang($row->priority) .'</li>';
-                    else
-                        $html .= '~';
-
-                    if($row->category_id != null)
-                        if($row->category != null)
-                            $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Category') .'"><i class="fe fe-grid me-1 fs-14" ></i>'.Str::limit($row->category->name, '40') .'</li>';
-                        else
-                            $html .= '~';
-                    else
-                        $html .= '~';
-
-                    if($row->last_reply == null)    
-                        $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'. lang('Last Replied') .'"><i class="fe fe-clock me-1 fs-14"></i>' . $row->created_at->diffForHumans() .'</li>';
-                    else
-                        $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Last Replied') .'"><i class="fe fe-clock me-1 fs-14"></i>' .$row->last_reply->diffForHumans() .'</li>';
-
-                    if($row->purchasecodesupport != null)
-                        if($row->purchasecodesupport == 'Supported')
-                            $html .= '<li class="px-2 text-success font-weight-semibold">' . lang('Support Active') .'</li>';
-
-                        if($row->purchasecodesupport == 'Expired')
-                            $html .= '<li class="px-2 text-danger-dark font-weight-semibold">' .lang('Support Expired') .'</li>';
-
-                $html .= '</ul>';
-                return $html;
-            })
-            ->addColumn('custname', function ($row) {
-                return $row->cust->username . ' (' . lang($row->cust->userType) . ')';
-            })
-            ->addColumn('mobilenumber', function ($row) {
-                $mobileNo = $row->values;
-                return $mobileNo;
-            })
-            ->addColumn('status', function ($row) {
-                $status = '';
-                if($row->status == "New")
-                    $status = '<span class="badge badge-burnt-orange">' .lang($row->status) .'</span>';
-
-                elseif($row->status == "Re-Open") 
-                    $status = '<span class="badge badge-teal">' . lang($row->status) .'</span>';
-
-                elseif($row->status == "Inprogress")
-                    $status = '<span class="badge badge-info">' . lang($row->status) .'</span>';
-
-                elseif($row->status == "On-Hold")
-                    $status = '<span class="badge badge-warning">' . lang($row->status) .'</span>';
-
-                else
-                    $status = '<span class="badge badge-danger">' . lang($row->status) .'</span>';
-
-                return $status;
-            })
-            ->addColumn('assignedTo', function ($row) {
+    return DataTables::of($query)
+        ->addIndexColumn() // ✅ Enables DT_RowIndex for serial number
+        ->addColumn('serial', function ($row) {
+            return ''; // will be replaced by DT_RowIndex automatically
+        })
+        ->addColumn('id', function ($row) {
+            $html = '<a href="' . url('admin/ticket-view/' . $row->ticket_id) . '" class="fs-14 d-block font-weight-semibold">' . e($row->subject) . '</a>';
+            $html .= '<ul class="fs-13 font-weight-normal d-flex custom-ul">';
+            $html .= '<li class="pe-2 text-muted">#' . e($row->ticket_id) . '</li>';
+            $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" title="' . lang('Date') . '"><i class="fe fe-calendar me-1 fs-14"></i>' . $row->created_at->timezone(Auth::user()->timezone)->format(setting('date_format')) . '</li>';
+            $html .= '</ul>';
+            return $html;
+        })
+        ->addColumn('custname', function ($row) {
+            return e($row->cust->username) . ' (' . lang($row->cust->userType) . ')';
+        })
+        ->addColumn('mobilenumber', function ($row) {
+            return e($row->values);
+        })
+        ->addColumn('status', function ($row) {
+            $statusClass = match ($row->status) {
+                'New' => 'burnt-orange',
+                'Re-Open' => 'teal',
+                'Inprogress' => 'info',
+                'On-Hold' => 'warning',
+                default => 'danger',
+            };
+            return '<span class="badge badge-' . $statusClass . '">' . lang($row->status) . '</span>';
+        })
+        ->addColumn('assignedTo', function ($row) {
                 $assignedTo = '';
                 if(Auth::user()->can('Ticket Assign')){
                     if($row->status == 'Suspend' || $row->status == 'Closed'){
@@ -663,7 +623,7 @@ class AdminDashboardController extends Controller
                                         </a>
                                     </li>
                                 </ul>
-                            </div>'; 
+                            </div>';
                         }else{
                              $assignedTo .= '<div class="btn-group">';
                                 if($row->ticketassignmutliples->isNotEmpty() && $row->selfassignuser_id == null){
@@ -696,30 +656,175 @@ class AdminDashboardController extends Controller
                                     </li>
                                 </ul>';
                             $assignedTo .= '</div>';
-                        }       
+                        }
                     }
                 }
 
                 return $assignedTo;
             })
+                ->addColumn('followup', function ($row) {
+                    return '<button class="btn btn-sm btn-warning followup-btn"
+
+                                data-id="' . $row->id . '"
+
+                                data-username="' . e(Auth::user()->name) . '"
+                                data-useremail="' . e(Auth::user()->email) . '">
+                                <i class="fe fe-message-square me-1"></i> Follow Up
+                            </button>';
+})
+
+
+
+
+        ->addColumn('action', function ($row) {
+            $action = '';
+            if (Auth::user()->can('Ticket Edit')) {
+                $action .= '<a href="' . url('admin/ticket-view/' . $row->ticket_id) . '" class="btn btn-sm action-btns"><i class="feather feather-eye text-primary" data-bs-toggle="tooltip" title="' . lang('Edit') . '"></i></a>';
+            }
+            if (Auth::user()->can('Ticket Delete')) {
+                $action .= '<a href="javascript:void(0)" data-id="' . $row->id . '" class="btn btn-sm action-btns" id="show-delete"><i class="feather feather-trash-2 text-danger" data-bs-toggle="tooltip" title="' . lang('Delete') . '"></i></a>';
+            }
+            return $action;
+        })
+        ->rawColumns(['serial', 'id', 'custname', 'mobilenumber', 'status', 'assignedTo', 'followup', 'action'])
+
+        ->make(true);
+}
+
+
+public function mailToTicket(Request $request)
+{
+    if ($request->ajax()) {
+        if (Auth::user()->dashboard == 'Admin') {
+            $query = Ticket::select('tickets.*', 'groups_categories.group_id', 'groups_users.users_id', 'ticket_customfields.values')
+                ->leftJoin('groups_categories', 'groups_categories.category_id', 'tickets.category_id')
+                ->leftJoin('customers', 'customers.id', 'tickets.cust_id')
+                ->leftJoin('ticket_customfields', function ($join) {
+                    $join->on('ticket_customfields.ticket_id', '=', 'tickets.id')
+                        ->where('ticket_customfields.fieldnames', '=', 'Mobile no.');
+                })
+                ->leftJoin('groups_users', 'groups_users.groups_id', 'groups_categories.group_id')
+                ->whereNotNull('tickets.emailticketfile')
+                ->latest('tickets.updated_at');
+        } else {
+            $groupexists = Groupsusers::where('users_id', Auth::id())->exists();
+
+            if ($groupexists) {
+                $query = Ticket::select('tickets.*', 'groups_categories.group_id', 'groups_users.users_id', 'ticket_customfields.values')
+                    ->leftJoin('groups_categories', 'groups_categories.category_id', 'tickets.category_id')
+                    ->leftJoin('ticketassignchildren', 'tickets.id', 'ticketassignchildren.ticket_id')
+                    ->leftJoin('customers', 'customers.id', 'tickets.cust_id')
+                    ->leftJoin('ticket_customfields', function ($join) {
+                        $join->on('ticket_customfields.ticket_id', '=', 'tickets.id')
+                            ->where('ticket_customfields.fieldnames', '=', 'Mobile no.');
+                    })
+                    ->leftJoin('groups_users', 'groups_users.groups_id', 'groups_categories.group_id')
+                    ->whereNotNull('groups_users.users_id')
+                    ->whereNotNull('tickets.emailticketfile')
+                    ->where('ticketassignchildren.toassignUser_id', Auth::id())
+                    ->where('groups_users.users_id', Auth::id())
+                    ->latest('tickets.updated_at');
+            } else {
+                $query = Ticket::select('tickets.*', 'groups_categories.group_id', 'groups_users.users_id', 'ticket_customfields.values')
+                    ->leftJoin('groups_categories', 'groups_categories.category_id', 'tickets.category_id')
+                    ->leftJoin('ticketassignchildren', 'tickets.id', 'ticketassignchildren.ticket_id')
+                    ->leftJoin('customers', 'customers.id', 'tickets.cust_id')
+                    ->leftJoin('ticket_customfields', function ($join) {
+                        $join->on('ticket_customfields.ticket_id', '=', 'tickets.id')
+                            ->where('ticket_customfields.fieldnames', '=', 'Mobile no.');
+                    })
+                    ->leftJoin('groups_users', 'groups_users.groups_id', 'groups_categories.group_id')
+                    ->whereNull('groups_users.users_id')
+                    ->whereNotNull('tickets.emailticketfile')
+                    ->where('ticketassignchildren.toassignUser_id', Auth::id())
+                    ->latest('tickets.updated_at');
+            }
+        }
+
+        if ($request->has('search') && !empty($request->search)) {
+            $searchValue = '%' . $request->search['value'] . '%';
+            $query->where(function ($q) use ($searchValue) {
+                $q->where('tickets.subject', 'like', $searchValue)
+                    ->orWhere('ticket_customfields.values', 'like', $searchValue)
+                    ->orWhere('tickets.ticket_id', 'like', $searchValue)
+                    ->orWhere(function ($qs) use ($searchValue) {
+                        $qs->where('customers.firstname', 'like', $searchValue)
+                            ->orWhere('customers.lastname', 'like', $searchValue);
+                    });
+            });
+        }
+
+        return DataTables::of($query)
+            ->addColumn('serial', function ($row) {
+                return '';
+            })
+
+            // ✅ NEW: checkbox column
+            ->addColumn('checkbox', function ($row) {
+                return '<input type="checkbox" class="row-checkbox" value="' . $row->id . '">';
+            })
+
+            // ✅ ID Column: keep it for subject, etc.
+            ->addColumn('id', function ($row) {
+                $html = '<a href="' . url('admin/ticket-view/' . $row->id) . '" class="fs-14 d-block font-weight-semibold">' . e($row->subject) . '</a>';
+                $html .= '<ul class="fs-13 font-weight-normal d-flex custom-ul">';
+                $html .= '<li class="pe-2 text-muted">#' . e($row->ticket_id) . '</li>';
+                $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" title="' . e(lang('Date')) . '">';
+                $html .= '<i class="fe fe-calendar me-1 fs-14"></i>' . $row->created_at->timezone(Auth::user()->timezone)->format(setting('date_format')) . '</li>';
+                $html .= '</ul>';
+                return $html;
+            })
+
+            ->addColumn('custname', function ($row) {
+                return $row->cust->username . ' (' . lang($row->cust->userType) . ')';
+            })
+
+            ->addColumn('mobilenumber', function ($row) {
+                return $row->values;
+            })
+
+            ->addColumn('status', function ($row) {
+                if ($row->status == "New")
+                    return '<span class="badge badge-burnt-orange">' . lang($row->status) . '</span>';
+                elseif ($row->status == "Re-Open")
+                    return '<span class="badge badge-teal">' . lang($row->status) . '</span>';
+                elseif ($row->status == "Inprogress")
+                    return '<span class="badge badge-info">' . lang($row->status) . '</span>';
+                elseif ($row->status == "On-Hold")
+                    return '<span class="badge badge-warning">' . lang($row->status) . '</span>';
+                else
+                    return '<span class="badge badge-danger">' . lang($row->status) . '</span>';
+            })
+
+            ->addColumn('assignedTo', function ($row) {
+                return '...'; // Copy your logic here if needed
+            })
+
             ->addColumn('action', function ($row) {
                 $action = '';
-                if(Auth::user()->can('Ticket Edit')){
-                    $action .= '<a href="' . url('admin/ticket-view/' . $row->ticket_id) .'" class="btn btn-sm action-btns edit-testimonial"><i class="feather feather-eye text-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Edit').'"></i></a>';
-                }else{
-                    $action .= '~';
+                if (Auth::user()->can('Ticket Edit')) {
+                    $action .= '<a href="' . url('admin/ticket-view/' . $row->ticket_id) . '" class="btn btn-sm action-btns"><i class="feather feather-eye text-primary" data-bs-toggle="tooltip" title="' . lang('Edit') . '"></i></a>';
                 }
-                if(Auth::user()->can('Ticket Delete')){
-                    $action .= '<a href="javascript:void(0)" data-id="'.$row->id .'" class="btn btn-sm action-btns" id="show-delete" ><i class="feather feather-trash-2 text-danger" data-id="'.$row->id.'" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Delete') .'"></i></a>';
-                }else{
-                    $action .= '~';
+                if (Auth::user()->can('Ticket Delete')) {
+                    $action .= '<a href="javascript:void(0)" data-id="' . $row->id . '" class="btn btn-sm action-btns" id="show-delete"><i class="feather feather-trash-2 text-danger" data-bs-toggle="tooltip" title="' . lang('Delete') . '"></i></a>';
                 }
-                
                 return $action;
             })
-            ->rawColumns(['serial', 'id' ,'custname', 'mobilenumber', 'status', 'assignedTo','action'])// Ensure HTML is rendered as raw HTML
+
+            ->rawColumns(['serial', 'checkbox', 'id', 'custname', 'mobilenumber', 'status', 'assignedTo', 'action'])
             ->make(true);
     }
+
+    // non-AJAX fallback
+    $title = Apptitle::first();
+    $footertext = Footertext::first();
+    $seopage = Seosetting::first();
+    $post = Pages::all();
+
+    return view('admin.superadmindashboard.mailToTickets.index', compact('seopage', 'footertext', 'title', 'post'));
+}
+
+
 
     public function recentticketsdata(Request $request)
     {
@@ -790,7 +895,7 @@ class AdminDashboardController extends Controller
                     // });
             }
         }
-        
+
         if ($request->has('search') && !empty($request->search)) {
             $searchValue = '%' . $request->search['value'] . '%';
             $query->where(function ($q) use ($searchValue) {
@@ -815,7 +920,7 @@ class AdminDashboardController extends Controller
                 <ul class="fs-13 font-weight-normal d-flex custom-ul">
                     <li class="pe-2 text-muted">#' . $row->ticket_id .'</span>
                     <li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Date').'"><i class="fe fe-calendar me-1 fs-14"></i> '.$row->created_at->timezone(Auth::user()->timezone)->format(setting('date_format')).'</li>';
-                
+
                     if($row->priority != null)
                         if($row->priority == "Low")
                             $html .= '<li class="ps-5 pe-2 preference preference-low" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Priority') .'">'.lang($row->priority) .'</li>';
@@ -839,7 +944,7 @@ class AdminDashboardController extends Controller
                     else
                         $html .= '~';
 
-                    if($row->last_reply == null)    
+                    if($row->last_reply == null)
                         $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'. lang('Last Replied') .'"><i class="fe fe-clock me-1 fs-14"></i>' . $row->created_at->diffForHumans() .'</li>';
                     else
                         $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Last Replied') .'"><i class="fe fe-clock me-1 fs-14"></i>' .$row->last_reply->diffForHumans() .'</li>';
@@ -866,7 +971,7 @@ class AdminDashboardController extends Controller
                 if($row->status == "New")
                     $status = '<span class="badge badge-burnt-orange">' .lang($row->status) .'</span>';
 
-                elseif($row->status == "Re-Open") 
+                elseif($row->status == "Re-Open")
                     $status = '<span class="badge badge-teal">' . lang($row->status) .'</span>';
 
                 elseif($row->status == "Inprogress")
@@ -910,7 +1015,7 @@ class AdminDashboardController extends Controller
                                         </a>
                                     </li>
                                 </ul>
-                            </div>'; 
+                            </div>';
                         }else{
                              $assignedTo .= '<div class="btn-group">';
                                 if($row->ticketassignmutliples->isNotEmpty() && $row->selfassignuser_id == null){
@@ -943,7 +1048,7 @@ class AdminDashboardController extends Controller
                                     </li>
                                 </ul>';
                             $assignedTo .= '</div>';
-                        }       
+                        }
                     }
                 }
 
@@ -961,7 +1066,7 @@ class AdminDashboardController extends Controller
                 }else{
                     $action .= '~';
                 }
-                
+
                 return $action;
             })
             ->rawColumns(['serial', 'id' ,'custname', 'mobilenumber', 'status', 'assignedTo','action'])// Ensure HTML is rendered as raw HTML
@@ -1015,7 +1120,7 @@ class AdminDashboardController extends Controller
                     ->latest('tickets.updated_at');
             }
         }
-        
+
         if ($request->has('search') && !empty($request->search)) {
             $searchValue = '%' . $request->search['value'] . '%';
             $query->where(function ($q) use ($searchValue) {
@@ -1040,7 +1145,7 @@ class AdminDashboardController extends Controller
                 <ul class="fs-13 font-weight-normal d-flex custom-ul">
                     <li class="pe-2 text-muted">#' . $row->ticket_id .'</span>
                     <li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Date').'"><i class="fe fe-calendar me-1 fs-14"></i> '.$row->created_at->timezone(Auth::user()->timezone)->format(setting('date_format')).'</li>';
-                
+
                     if($row->priority != null)
                         if($row->priority == "Low")
                             $html .= '<li class="ps-5 pe-2 preference preference-low" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Priority') .'">'.lang($row->priority) .'</li>';
@@ -1064,7 +1169,7 @@ class AdminDashboardController extends Controller
                     else
                         $html .= '~';
 
-                    if($row->last_reply == null)    
+                    if($row->last_reply == null)
                         $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'. lang('Last Replied') .'"><i class="fe fe-clock me-1 fs-14"></i>' . $row->created_at->diffForHumans() .'</li>';
                     else
                         $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Last Replied') .'"><i class="fe fe-clock me-1 fs-14"></i>' .$row->last_reply->diffForHumans() .'</li>';
@@ -1091,7 +1196,7 @@ class AdminDashboardController extends Controller
                 if($row->status == "New")
                     $status = '<span class="badge badge-burnt-orange">' .lang($row->status) .'</span>';
 
-                elseif($row->status == "Re-Open") 
+                elseif($row->status == "Re-Open")
                     $status = '<span class="badge badge-teal">' . lang($row->status) .'</span>';
 
                 elseif($row->status == "Inprogress")
@@ -1135,7 +1240,7 @@ class AdminDashboardController extends Controller
                                         </a>
                                     </li>
                                 </ul>
-                            </div>'; 
+                            </div>';
                         }else{
                              $assignedTo .= '<div class="btn-group">';
                                 if($row->ticketassignmutliples->isNotEmpty() && $row->selfassignuser_id == null){
@@ -1168,7 +1273,7 @@ class AdminDashboardController extends Controller
                                     </li>
                                 </ul>';
                             $assignedTo .= '</div>';
-                        }       
+                        }
                     }
                 }
 
@@ -1186,7 +1291,7 @@ class AdminDashboardController extends Controller
                 }else{
                     $action .= '~';
                 }
-                
+
                 return $action;
             })
             ->rawColumns(['serial', 'id' ,'custname', 'mobilenumber', 'status', 'assignedTo','action'])// Ensure HTML is rendered as raw HTML
@@ -1443,7 +1548,7 @@ class AdminDashboardController extends Controller
                     });
             }
         }
-        
+
         if ($request->has('search') && !empty($request->search)) {
             $searchValue = '%' . $request->search['value'] . '%';
             $query->where(function ($q) use ($searchValue) {
@@ -1468,7 +1573,7 @@ class AdminDashboardController extends Controller
                 <ul class="fs-13 font-weight-normal d-flex custom-ul">
                     <li class="pe-2 text-muted">#' . $row->ticket_id .'</span>
                     <li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Date').'"><i class="fe fe-calendar me-1 fs-14"></i> '.$row->created_at->timezone(Auth::user()->timezone)->format(setting('date_format')).'</li>';
-                
+
                     if($row->priority != null)
                         if($row->priority == "Low")
                             $html .= '<li class="ps-5 pe-2 preference preference-low" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Priority') .'">'.lang($row->priority) .'</li>';
@@ -1492,7 +1597,7 @@ class AdminDashboardController extends Controller
                     else
                         $html .= '~';
 
-                    if($row->last_reply == null)    
+                    if($row->last_reply == null)
                         $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'. lang('Last Replied') .'"><i class="fe fe-clock me-1 fs-14"></i>' . $row->created_at->diffForHumans() .'</li>';
                     else
                         $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Last Replied') .'"><i class="fe fe-clock me-1 fs-14"></i>' .$row->last_reply->diffForHumans() .'</li>';
@@ -1519,7 +1624,7 @@ class AdminDashboardController extends Controller
                 if($row->status == "New")
                     $status = '<span class="badge badge-burnt-orange">' .lang($row->status) .'</span>';
 
-                elseif($row->status == "Re-Open") 
+                elseif($row->status == "Re-Open")
                     $status = '<span class="badge badge-teal">' . lang($row->status) .'</span>';
 
                 elseif($row->status == "Inprogress")
@@ -1563,7 +1668,7 @@ class AdminDashboardController extends Controller
                                         </a>
                                     </li>
                                 </ul>
-                            </div>'; 
+                            </div>';
                         }else{
                              $assignedTo .= '<div class="btn-group">';
                                 if($row->ticketassignmutliples->isNotEmpty() && $row->selfassignuser_id == null){
@@ -1596,7 +1701,7 @@ class AdminDashboardController extends Controller
                                     </li>
                                 </ul>';
                             $assignedTo .= '</div>';
-                        }       
+                        }
                     }
                 }
 
@@ -1614,7 +1719,7 @@ class AdminDashboardController extends Controller
                 }else{
                     $action .= '~';
                 }
-                
+
                 return $action;
             })
             ->rawColumns(['serial', 'id' ,'custname', 'mobilenumber', 'status', 'assignedTo','action'])// Ensure HTML is rendered as raw HTML
@@ -1725,7 +1830,7 @@ class AdminDashboardController extends Controller
         ->where('tickets.status', '!=' ,'Suspend')
         ->where('ticketassignchildren.toassignuser_id', Auth::id())
         ->latest('tickets.updated_at');
-        
+
         if ($request->has('search') && !empty($request->search)) {
             $searchValue = '%' . $request->search['value'] . '%';
             $query->where(function ($q) use ($searchValue) {
@@ -1750,7 +1855,7 @@ class AdminDashboardController extends Controller
                 <ul class="fs-13 font-weight-normal d-flex custom-ul">
                     <li class="pe-2 text-muted">#' . $row->ticket_id .'</span>
                     <li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Date').'"><i class="fe fe-calendar me-1 fs-14"></i> '.$row->created_at->timezone(Auth::user()->timezone)->format(setting('date_format')).'</li>';
-                
+
                     if($row->priority != null)
                         if($row->priority == "Low")
                             $html .= '<li class="ps-5 pe-2 preference preference-low" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Priority') .'">'.lang($row->priority) .'</li>';
@@ -1774,7 +1879,7 @@ class AdminDashboardController extends Controller
                     else
                         $html .= '~';
 
-                    if($row->last_reply == null)    
+                    if($row->last_reply == null)
                         $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'. lang('Last Replied') .'"><i class="fe fe-clock me-1 fs-14"></i>' . $row->created_at->diffForHumans() .'</li>';
                     else
                         $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Last Replied') .'"><i class="fe fe-clock me-1 fs-14"></i>' .$row->last_reply->diffForHumans() .'</li>';
@@ -1801,7 +1906,7 @@ class AdminDashboardController extends Controller
                 if($row->status == "New")
                     $status = '<span class="badge badge-burnt-orange">' .lang($row->status) .'</span>';
 
-                elseif($row->status == "Re-Open") 
+                elseif($row->status == "Re-Open")
                     $status = '<span class="badge badge-teal">' . lang($row->status) .'</span>';
 
                 elseif($row->status == "Inprogress")
@@ -1845,7 +1950,7 @@ class AdminDashboardController extends Controller
                                         </a>
                                     </li>
                                 </ul>
-                            </div>'; 
+                            </div>';
                         }else{
                              $assignedTo .= '<div class="btn-group">';
                                 if($row->ticketassignmutliples->isNotEmpty() && $row->selfassignuser_id == null){
@@ -1878,7 +1983,7 @@ class AdminDashboardController extends Controller
                                     </li>
                                 </ul>';
                             $assignedTo .= '</div>';
-                        }       
+                        }
                     }
                 }
 
@@ -1896,7 +2001,7 @@ class AdminDashboardController extends Controller
                 }else{
                     $action .= '~';
                 }
-                
+
                 return $action;
             })
             ->rawColumns(['serial', 'id' ,'custname', 'mobilenumber', 'status', 'assignedTo','action'])// Ensure HTML is rendered as raw HTML
@@ -2045,7 +2150,7 @@ class AdminDashboardController extends Controller
                     });
             }
         }
-        
+
         if ($request->has('search') && !empty($request->search)) {
             $searchValue = '%' . $request->search['value'] . '%';
             $query->where(function ($q) use ($searchValue) {
@@ -2070,7 +2175,7 @@ class AdminDashboardController extends Controller
                 <ul class="fs-13 font-weight-normal d-flex custom-ul">
                     <li class="pe-2 text-muted">#' . $row->ticket_id .'</span>
                     <li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Date').'"><i class="fe fe-calendar me-1 fs-14"></i> '.$row->created_at->timezone(Auth::user()->timezone)->format(setting('date_format')).'</li>';
-                
+
                     if($row->priority != null)
                         if($row->priority == "Low")
                             $html .= '<li class="ps-5 pe-2 preference preference-low" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Priority') .'">'.lang($row->priority) .'</li>';
@@ -2094,7 +2199,7 @@ class AdminDashboardController extends Controller
                     else
                         $html .= '~';
 
-                    if($row->last_reply == null)    
+                    if($row->last_reply == null)
                         $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'. lang('Last Replied') .'"><i class="fe fe-clock me-1 fs-14"></i>' . $row->created_at->diffForHumans() .'</li>';
                     else
                         $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Last Replied') .'"><i class="fe fe-clock me-1 fs-14"></i>' .$row->last_reply->diffForHumans() .'</li>';
@@ -2121,7 +2226,7 @@ class AdminDashboardController extends Controller
                 if($row->status == "New")
                     $status = '<span class="badge badge-burnt-orange">' .lang($row->status) .'</span>';
 
-                elseif($row->status == "Re-Open") 
+                elseif($row->status == "Re-Open")
                     $status = '<span class="badge badge-teal">' . lang($row->status) .'</span>';
 
                 elseif($row->status == "Inprogress")
@@ -2165,7 +2270,7 @@ class AdminDashboardController extends Controller
                                         </a>
                                     </li>
                                 </ul>
-                            </div>'; 
+                            </div>';
                         }else{
                              $assignedTo .= '<div class="btn-group">';
                                 if($row->ticketassignmutliples->isNotEmpty() && $row->selfassignuser_id == null){
@@ -2198,7 +2303,7 @@ class AdminDashboardController extends Controller
                                     </li>
                                 </ul>';
                             $assignedTo .= '</div>';
-                        }       
+                        }
                     }
                 }
 
@@ -2216,7 +2321,7 @@ class AdminDashboardController extends Controller
                 }else{
                     $action .= '~';
                 }
-                
+
                 return $action;
             })
             ->rawColumns(['serial', 'id' ,'custname', 'mobilenumber', 'status', 'assignedTo','action'])// Ensure HTML is rendered as raw HTML
@@ -2365,7 +2470,7 @@ class AdminDashboardController extends Controller
                     });
             }
         }
-        
+
         if ($request->has('search') && !empty($request->search)) {
             $searchValue = '%' . $request->search['value'] . '%';
             $query->where(function ($q) use ($searchValue) {
@@ -2390,7 +2495,7 @@ class AdminDashboardController extends Controller
                 <ul class="fs-13 font-weight-normal d-flex custom-ul">
                     <li class="pe-2 text-muted">#' . $row->ticket_id .'</span>
                     <li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Date').'"><i class="fe fe-calendar me-1 fs-14"></i> '.$row->created_at->timezone(Auth::user()->timezone)->format(setting('date_format')).'</li>';
-                
+
                     if($row->priority != null)
                         if($row->priority == "Low")
                             $html .= '<li class="ps-5 pe-2 preference preference-low" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Priority') .'">'.lang($row->priority) .'</li>';
@@ -2414,7 +2519,7 @@ class AdminDashboardController extends Controller
                     else
                         $html .= '~';
 
-                    if($row->last_reply == null)    
+                    if($row->last_reply == null)
                         $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'. lang('Last Replied') .'"><i class="fe fe-clock me-1 fs-14"></i>' . $row->created_at->diffForHumans() .'</li>';
                     else
                         $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Last Replied') .'"><i class="fe fe-clock me-1 fs-14"></i>' .$row->last_reply->diffForHumans() .'</li>';
@@ -2441,7 +2546,7 @@ class AdminDashboardController extends Controller
                 if($row->status == "New")
                     $status = '<span class="badge badge-burnt-orange">' .lang($row->status) .'</span>';
 
-                elseif($row->status == "Re-Open") 
+                elseif($row->status == "Re-Open")
                     $status = '<span class="badge badge-teal">' . lang($row->status) .'</span>';
 
                 elseif($row->status == "Inprogress")
@@ -2485,7 +2590,7 @@ class AdminDashboardController extends Controller
                                         </a>
                                     </li>
                                 </ul>
-                            </div>'; 
+                            </div>';
                         }else{
                              $assignedTo .= '<div class="btn-group">';
                                 if($row->ticketassignmutliples->isNotEmpty() && $row->selfassignuser_id == null){
@@ -2518,7 +2623,7 @@ class AdminDashboardController extends Controller
                                     </li>
                                 </ul>';
                             $assignedTo .= '</div>';
-                        }       
+                        }
                     }
                 }
 
@@ -2536,7 +2641,7 @@ class AdminDashboardController extends Controller
                 }else{
                     $action .= '~';
                 }
-                
+
                 return $action;
             })
             ->rawColumns(['serial', 'id' ,'custname', 'mobilenumber', 'status', 'assignedTo','action'])// Ensure HTML is rendered as raw HTML
@@ -2570,7 +2675,7 @@ class AdminDashboardController extends Controller
             });
         });
 
-        
+
         // if ($request->has('search') && !empty($request->search)) {
         //     $searchValue = '%' . $request->search['value'] . '%';
         //     $query->where(function ($q) use ($searchValue) {
@@ -2605,7 +2710,7 @@ class AdminDashboardController extends Controller
                 <ul class="fs-13 font-weight-normal d-flex custom-ul">
                     <li class="pe-2 text-muted">#' . $show_ticket_id .'</span>
                     <li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Date').'"><i class="fe fe-calendar me-1 fs-14"></i> '.$row->created_at->timezone(Auth::user()->timezone)->format(setting('date_format')).'</li>';
-                
+
                     if($row->priority != null)
                         if($row->priority == "Low")
                             $html .= '<li class="ps-5 pe-2 preference preference-low" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Priority') .'">'.lang($row->priority) .'</li>';
@@ -2629,7 +2734,7 @@ class AdminDashboardController extends Controller
                     else
                         $html .= '~';
 
-                    if($row->last_reply == null)    
+                    if($row->last_reply == null)
                         $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'. lang('Last Replied') .'"><i class="fe fe-clock me-1 fs-14"></i>' . $row->created_at->diffForHumans() .'</li>';
                     else
                         $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Last Replied') .'"><i class="fe fe-clock me-1 fs-14"></i>' .$row->last_reply->diffForHumans() .'</li>';
@@ -2656,7 +2761,7 @@ class AdminDashboardController extends Controller
                 if($row->status == "New")
                     $status = '<span class="badge badge-burnt-orange">' .lang($row->status) .'</span>';
 
-                elseif($row->status == "Re-Open") 
+                elseif($row->status == "Re-Open")
                     $status = '<span class="badge badge-teal">' . lang($row->status) .'</span>';
 
                 elseif($row->status == "Inprogress")
@@ -2700,7 +2805,7 @@ class AdminDashboardController extends Controller
                                         </a>
                                     </li>
                                 </ul>
-                            </div>'; 
+                            </div>';
                         }else{
                              $assignedTo .= '<div class="btn-group">';
                                 if($row->ticketassignmutliples->isNotEmpty() && $row->selfassignuser_id == null){
@@ -2733,7 +2838,7 @@ class AdminDashboardController extends Controller
                                     </li>
                                 </ul>';
                             $assignedTo .= '</div>';
-                        }       
+                        }
                     }
                 }
 
@@ -2751,7 +2856,7 @@ class AdminDashboardController extends Controller
                 }else{
                     $action .= '~';
                 }
-                
+
                 return $action;
             })
             ->rawColumns(['serial', 'id' ,'custname', 'mobilenumber', 'status', 'assignedTo','action'])// Ensure HTML is rendered as raw HTML
@@ -3095,7 +3200,7 @@ class AdminDashboardController extends Controller
                     });
             }
         }
-        
+
         if ($request->has('search') && !empty($request->search)) {
             $searchValue = '%' . $request->search['value'] . '%';
             $query->where(function ($q) use ($searchValue) {
@@ -3120,7 +3225,7 @@ class AdminDashboardController extends Controller
                 <ul class="fs-13 font-weight-normal d-flex custom-ul">
                     <li class="pe-2 text-muted">#' . $row->ticket_id .'</span>
                     <li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Date').'"><i class="fe fe-calendar me-1 fs-14"></i> '.$row->created_at->timezone(Auth::user()->timezone)->format(setting('date_format')).'</li>';
-                
+
                     if($row->priority != null)
                         if($row->priority == "Low")
                             $html .= '<li class="ps-5 pe-2 preference preference-low" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Priority') .'">'.lang($row->priority) .'</li>';
@@ -3144,7 +3249,7 @@ class AdminDashboardController extends Controller
                     else
                         $html .= '~';
 
-                    if($row->last_reply == null)    
+                    if($row->last_reply == null)
                         $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'. lang('Last Replied') .'"><i class="fe fe-clock me-1 fs-14"></i>' . $row->created_at->diffForHumans() .'</li>';
                     else
                         $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="'.lang('Last Replied') .'"><i class="fe fe-clock me-1 fs-14"></i>' .$row->last_reply->diffForHumans() .'</li>';
@@ -3171,7 +3276,7 @@ class AdminDashboardController extends Controller
                 if($row->status == "New")
                     $status = '<span class="badge badge-burnt-orange">' .lang($row->status) .'</span>';
 
-                elseif($row->status == "Re-Open") 
+                elseif($row->status == "Re-Open")
                     $status = '<span class="badge badge-teal">' . lang($row->status) .'</span>';
 
                 elseif($row->status == "Inprogress")
@@ -3215,7 +3320,7 @@ class AdminDashboardController extends Controller
                                         </a>
                                     </li>
                                 </ul>
-                            </div>'; 
+                            </div>';
                         }else{
                              $assignedTo .= '<div class="btn-group">';
                                 if($row->ticketassignmutliples->isNotEmpty() && $row->selfassignuser_id == null){
@@ -3248,7 +3353,7 @@ class AdminDashboardController extends Controller
                                     </li>
                                 </ul>';
                             $assignedTo .= '</div>';
-                        }       
+                        }
                     }
                 }
 
@@ -3266,12 +3371,54 @@ class AdminDashboardController extends Controller
                 }else{
                     $action .= '~';
                 }
-                
+
                 return $action;
             })
             ->rawColumns(['serial', 'id' ,'custname', 'mobilenumber', 'status', 'assignedTo','action'])// Ensure HTML is rendered as raw HTML
             ->make(true);
     }
+// move to dashboard and value of emailticketfile will be null
+public function moveToDashboard(Request $request)
+{
+    // 🔍 Debug log: will appear in storage/logs/laravel.log
+    \Log::info('Ticket move request', ['ids' => $request->ticket_ids]);
+
+    // Optional: Validation (recommended)
+    $request->validate([
+        'ticket_ids' => 'required|array',
+        'ticket_ids.*' => 'integer|exists:tickets,id'
+    ]);
+
+    Ticket::whereIn('id', $request->ticket_ids)->update([
+        'emailticketfile' => null
+    ]);
+
+    return response()->json(['status' => 'success']);
+}
+
+// send follow-up mail
+
+public function saveFollowup(Request $request)
+{
+    try {
+        $request->validate([
+            'ticket_id' => 'required|exists:tickets,id',
+            'note' => 'required|string|max:1000',
+        ]);
+
+        $user = Auth::user();
+
+        Mail::to($user->email)->send(new FollowupMail($user->name, $request->ticket_id, $request->note));
+
+        return response()->json(['success' => true, 'message' => 'Follow up saved and email sent.']);
+    } catch (\Exception $e) {
+        \Log::error('Followup error: '.$e->getMessage());
+        return response()->json(['success' => false, 'message' => 'Server Error', 'error' => $e->getMessage()], 500);
+    }
+}
+
+
+
 
 
 }

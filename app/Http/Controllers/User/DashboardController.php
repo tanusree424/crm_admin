@@ -186,5 +186,13 @@ class DashboardController extends Controller
 
        return response()->json(['success'=> lang('Deleted Successfully', 'alerts'),200]);
    }
+   public function TicketReport()
+   {
+      $seopage = Seosetting::first();
+        $data['seopage'] = $seopage;
+       $title = Apptitle::first();
+        $data['title'] = $title;
+    return view('user.auth.TickertReport',compact('data','seopage','title'));
+   }
 
 }

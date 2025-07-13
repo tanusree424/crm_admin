@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\SoftDeletes;
+
 use App\Models\Ticket\Comment;
 use App\Models\Ticket\Category;
 use App\Models\Customer;
@@ -17,30 +18,35 @@ use App\Models\Ticketnote;
 use App\Models\Subcategorychild;
 use App\Models\Subcategory;
 use App\Models\TicketCustomfield;
-use App\Models\ticketassignchild;
-use App\Models\tickethistory;
-
+use App\Models\TicketAssignChild;
+use App\Models\TicketHistory;
+use App\Models\TicketReply;
 
 class Ticket extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes;
-    use InteractsWithMedia;
+    use HasFactory, SoftDeletes, InteractsWithMedia;
 
-    protected $table ="tickets";
+    protected $table = "tickets";
+
     protected $fillable = [
-        'cust_id', 'category_id', 'image', 'ticket_id', 'title', 'priority', 'message', 'status','subject','user_id','project_id','auto_close_ticket',
-        'project', 'purchasecode', 'purchasecodesupport','subcategory','material_id','brand','product_type','transfer_date','awb_no'
+        'cust_id', 'category_id', 'image', 'ticket_id', 'title', 'priority', 'message', 'status',
+        'subject', 'user_id', 'project_id', 'auto_close_ticket', 'project', 'purchasecode', 'purchasecodesupport',
+        'subcategory', 'material_id', 'brand', 'product_type', 'transfer_date', 'awb_no', 'emailticketfile'
     ];
 
     protected $dates = [
         'closing_ticket',
         'last_reply',
-        'craeted_at',
+        'created_at',
         'updated_at',
         'auto_replystatus',
         'auto_close_ticket',
         'auto_overdue_ticket'
     ];
+
+    // -----------------------------
+    // Relationships
+    // -----------------------------
 
     public function cust()
     {
@@ -51,18 +57,32 @@ class Ticket extends Model implements HasMedia
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
     public function toassignuser()
     {
         return $this->belongsTo(User::class, 'toassignuser_id');
     }
+
     public function myassignuser()
     {
         return $this->belongsTo(User::class, 'myassignuser_id');
     }
+
+    public function selfassign()
+    {
+        return $this->belongsTo(User::class, 'selfassignuser_id');
+    }
+
+    public function closedusers()
+    {
+        return $this->belongsTo(User::class, 'closedby_user');
+    }
+
     public function comments()
     {
         return $this->hasMany(Comment::class)->latest('created_at');
     }
+
     public function category()
     {
         return $this->belongsTo(Category::class, 'category_id');
@@ -78,33 +98,19 @@ class Ticket extends Model implements HasMedia
         return $this->hasMany(CategoryUser::class, 'category_id');
     }
 
-    public function ticketnote(){
-        return $this->hasmany(Ticketnote::class, 'ticket_id');
+    public function ticketnote()
+    {
+        return $this->hasMany(Ticketnote::class, 'ticket_id');
     }
 
-    public function registerMediaCollections(): void
-    {
-        $this->addMediaCollection('ticket');
-            //add option
-    }
     public function subcategories()
     {
-    	return $this->belongsTo(Subcategorychild::class, 'subcategory', 'subcategory_id');
+        return $this->belongsTo(Subcategorychild::class, 'subcategory', 'subcategory_id');
     }
 
     public function subcategoriess()
     {
-    	return $this->belongsTo(Subcategory::class, 'subcategory', 'id');
-    }
-
-    public function selfassign()
-    {
-        return $this->belongsTo(User::class, 'selfassignuser_id');
-    }
-
-    public function closedusers()
-    {
-        return $this->belongsTo(User::class, 'closedby_user');
+        return $this->belongsTo(Subcategory::class, 'subcategory', 'id');
     }
 
     public function ticket_customfield()
@@ -114,18 +120,30 @@ class Ticket extends Model implements HasMedia
 
     public function ticketassignmutliple()
     {
-        return $this->belongsToMany(ticketassignchild::class, 'ticketassignchildren', 'ticket_id', 'toassignuser_id');
+        return $this->belongsToMany(TicketAssignChild::class, 'ticketassignchildren', 'ticket_id', 'toassignuser_id');
     }
 
     public function ticketassignmutliples()
     {
-        return $this->hasMany(ticketassignchild::class);
+        return $this->hasMany(TicketAssignChild::class, 'ticket_id');
     }
 
     public function ticket_history()
     {
-        return $this->hasMany(tickethistory::class, 'ticket_id');
+        return $this->hasMany(TicketHistory::class, 'ticket_id');
     }
 
+    public function last_reply()
+    {
+        return $this->hasOne(TicketReply::class, 'ticket_id')->latestOfMany();
+    }
 
+    // -----------------------------
+    // Media Library
+    // -----------------------------
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('ticket');
+    }
 }

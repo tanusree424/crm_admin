@@ -131,6 +131,7 @@
                <ul class="slide-menu custom-ul">
                    <li><a href="{{route('admin.recenttickets')}}" class="slide-item">{{lang('Recent Tickets', 'Menu')}}</a></li>
                    <li><a href="{{url('/admin/alltickets')}}" class="slide-item">{{lang('Total Tickets', 'Menu')}}</a></li>
+                   <li><a href="{{route('admin.mailtotickets.data')}}" class="slide-item">{{lang('Inbox', 'Menu')}}</a></li>
                    <li><a href="{{url('/admin/activeticket')}}" class="slide-item">{{lang('Active Tickets', 'Menu')}}</a></li>
                    <li><a href="{{url('/admin/closedticket')}}" class="slide-item">{{lang('Closed Tickets', 'Menu')}}</a></li>
                    <li><a href="{{route('admin.onholdticket')}}" class="slide-item">{{lang('On-Hold Tickets', 'Menu')}}</a></li>
@@ -222,7 +223,7 @@
                 </ul>
             </li>
 
-            
+
             <!-- Inventory Start -->
             <li class="slide">
                 <a class="side-menu__item" data-bs-toggle="slide" href="#">
@@ -279,7 +280,7 @@
                     <li><a href="{{url('/admin/materialgroup3')}}" class="slide-item">Material Group Code 3</a></li>
                     @endcan
 
-                  
+
                 </ul>
             </li>
 

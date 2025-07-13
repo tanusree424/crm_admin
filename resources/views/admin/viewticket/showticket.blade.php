@@ -325,8 +325,12 @@
 											</div>
 											<a href="{{route('imageurl', array($ticketss->id,$ticketss->file_name))}}" target="_blank" class="uhelp-attach-acion p-2 rounded border lh-1 me-1 d-flex align-items-center justify-content-center"><i
 																class="fe fe-eye text-muted fs-12"></i></a>
-											<a href="{{route('imagedownload', array($ticketss->id,$ticketss->file_name))}}" class="uhelp-attach-acion p-2 rounded border lh-1 d-flex align-items-center justify-content-center"><i
-													class="fe fe-download text-muted fs-12"></i></a>
+											{{-- <a href="{{route('imagedownload', array($ticketss->id,$ticketss->file_name))}}" class="uhelp-attach-acion p-2 rounded border lh-1 d-flex align-items-center justify-content-center"><i
+													class="fe fe-download text-muted fs-12"></i></a> --}}
+                                                    <a href="{{ route('imagedownload', [$ticketss->id, urlencode($ticketss->file_name)]) }}">
+    <i class="fe fe-download"></i>
+</a>
+
 										</div>
 									</div>
 									@endforeach

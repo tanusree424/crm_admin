@@ -275,26 +275,96 @@
                         let show = {!! json_encode(lang("Show")) !!};
                         let search = {!! json_encode(lang("Search...")) !!};
                         // Datatable
-                        $('#supportticket-dashe').dataTable({
-                            language: {
-                                searchPlaceholder: search,
-                                scrollX: "100%",
-                                sSearch: '',
-                                paginate: {
-                                previous: prev,
-                                next: next
-                                },
-                                emptyTable : nodata,
-                                infoFiltered: `${maxRecordfilter} _MAX_ ${maxRecords}`,
-                                info: `${showing} _PAGE_ ${ofval} _PAGES_`,
-                                infoEmpty: noentries,
-                                lengthMenu: `${show} _MENU_ ${entries} `,
-                            },
-                            order:[],
-                            columnDefs: [
-                                { "orderable": false, "targets":[ 0,1,4] }
-                            ],
-                        });
+                        // $('#supportticket-dashe').dataTable({
+                        //     language: {
+                        //         searchPlaceholder: search,
+                        //         scrollX: "100%",
+                        //         sSearch: '',
+                        //         paginate: {
+                        //         previous: prev,
+                        //         next: next
+                        //         },
+                        //         emptyTable : nodata,
+                        //         infoFiltered: `${maxRecordfilter} _MAX_ ${maxRecords}`,
+                        //         info: `${showing} _PAGE_ ${ofval} _PAGES_`,
+                        //         infoEmpty: noentries,
+                        //         lengthMenu: `${show} _MENU_ ${entries} `,
+                        //     },
+                        //     order:[],
+                        //     columnDefs: [
+                        //         { "orderable": false, "targets":[ 0,1,4] }
+                        //     ],
+                        // });
+
+//                         $('#supportticket-dashe thead tr').clone(true).appendTo('#supportticket-dashe thead');
+//                             $('#supportticket-dashe thead tr:eq(1) th').each(function (i) {
+//                                 if (i === 0 || i === 1 || i === 4) {
+//                                     $(this).html(''); // Skip non-orderable columns if you want
+//                                     return;
+//                                 }
+
+//                                 var title = $(this).text();
+//                                 $(this).html('<input type="text" placeholder="Search ' + title + '" style="width: 100%;" />');
+
+//                                 $('input', this).on('keyup change', function () {
+//                                     if ($('#supportticket-dashe').DataTable().column(i).search() !== this.value) {
+//                                         $('#supportticket-dashe')
+//                                             .DataTable()
+//                                             .column(i)
+//                                             .search(this.value)
+//                                             .draw();
+//                                     }
+//                                 });
+// });
+// Clone header row for filter inputs
+$('#supportticket-dashe thead tr')
+    .clone(true)
+    .addClass('filters')
+    .appendTo('#supportticket-dashe thead');
+
+var table = $('#supportticket-dashe').DataTable({
+    language: {
+        searchPlaceholder: search,
+        scrollX: "100%",
+        sSearch: '',
+        paginate: {
+            previous: prev,
+            next: next
+        },
+        emptyTable: nodata,
+        infoFiltered: `${maxRecordfilter} _MAX_ ${maxRecords}`,
+        info: `${showing} _PAGE_ ${ofval} _PAGES_`,
+        infoEmpty: noentries,
+        lengthMenu: `${show} _MENU_ ${entries}`
+    },
+    order: [],
+    columnDefs: [
+        { orderable: false, targets: [0, 1, 4] }
+    ],
+    initComplete: function () {
+        var api = this.api();
+
+        // For each column, add input filter
+        api.columns().eq(0).each(function (colIdx) {
+            var cell = $('.filters th').eq($(api.column(colIdx).header()).index());
+            if ([0, 1, 4].includes(colIdx)) {
+                // Optional: skip filters for specific columns (like Action)
+                $(cell).html('');
+                return;
+            }
+
+            $(cell).html('<input type="text" placeholder="Search" style="width:100%;" />');
+
+            $('input', cell).on('keyup change', function () {
+                api.column(colIdx)
+                    .search(this.value)
+                    .draw();
+            });
+        });
+    }
+});
+
+
 
 
                         $('.form-select').select2({

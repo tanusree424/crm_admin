@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 
 use Auth;
@@ -30,6 +31,8 @@ use DataTables;
 use Session;
 use App\Models\VerifyUser;
 use App\Models\TicketCustomfield;
+use App\Models\Organizations;
+use App\Models\CustomerOrganization;
 
 
 class AdminprofileController extends Controller
@@ -81,8 +84,8 @@ class AdminprofileController extends Controller
 
 
     }
-    
-    
+
+
     public function getUserID(Request $request, $email){
       $user_id=Customer::where('email',$email)->first();
       $data=[];
@@ -209,7 +212,7 @@ class AdminprofileController extends Controller
     {
         $query = DB::table('customers as c')
         ->select(
-            'c.*',
+            'c.id', 'c.firstname', 'c.lastname', 'c.email', 'c.phone', 'c.username', 'c.gender','c.provider_id','c.logintype','c.userType','c.verified', 'c.created_at','c.status'
                 //DB::raw("MAX((SELECT tcs.values FROM ticket_customfields as tcs WHERE tcs.ticket_id = t.id AND tcs.fieldnames = 'Mobile no.' LIMIT 1)) as CustMobileno")
                 //DB::raw("(SELECT tcs.values FROM ticket_customfields as tcs WHERE tcs.ticket_id = t.id AND tcs.fieldnames = 'Mobile no.' LIMIT 1) as CustMobileno")
             //DB::raw("MAX(CASE WHEN ct.fieldnames ='Mobile no.' THEN ct.values END) AS CustMobileno")
@@ -225,7 +228,7 @@ class AdminprofileController extends Controller
         //->leftJoin('ticket_customfields as ct', 'ct.ticket_id', '=', 't.id')
         if(Auth::user()->getRoleNames()[0] != 'superadmin' && !empty(Auth::user()->country)){
             $country = Auth::user()->country;
-            $query->where("ticket_customfields.values", '=', "{$country}");  
+            $query->where("ticket_customfields.values", '=', "{$country}");
             // $query->where(function($query) use ($country) {
             //     $query->where('ticket_customfields.fieldnames', '=', 'country')
             //           ->where('ticket_customfields.values', '=', $country);
@@ -245,7 +248,7 @@ class AdminprofileController extends Controller
                     });
             });
         }
-        $query->groupBy('c.id');
+         $query->groupBy('c.id', 'c.firstname', 'c.lastname', 'c.email', 'c.phone', 'c.username', 'c.gender','c.provider_id','c.logintype','c.userType','c.verified','c.created_at','c.status');
         $query->get();
 
         return DataTables::of($query)
@@ -281,13 +284,13 @@ class AdminprofileController extends Controller
                 $customer = $customer->id;
                 $customerMobile = "SELECT tcs.values FROM customers as c LEFT JOIN tickets t ON c.id = t.cust_id LEFT JOIN ticket_customfields as tcs ON t.id = tcs.ticket_id AND tcs.fieldnames = 'Mobile no.'WHERE c.id = $customer";
                 $customerMobileDetails = DB::select($customerMobile);
-                
+
                 $custMobileNumber = '';
 
                 if(isset($customerMobileDetails[0]) && isset($customerMobileDetails[0]->values)){
-                    $custMobileNumber = $customerMobileDetails[0]->values;    
+                    $custMobileNumber = $customerMobileDetails[0]->values;
                 }
-                
+
                 $mobileNo = !empty($custMobileNumber) ? $custMobileNumber : (!empty($customer->phone) ? $customer->phone : '');
                 //$mobileNo = !empty($customer->phone) ? $customer->phone : $customer->CustMobileno;
                 return $mobileNo;
@@ -491,8 +494,8 @@ class AdminprofileController extends Controller
         //$data['customers'] = $customer;
 
         // $customer = "SELECT c.*, MAX(CASE WHEN ct.fieldnames ='Mobile no.' THEN ct.values END) AS CustMobileno
-        // FROM customers c 
-        // LEFT JOIN tickets t ON t.cust_id = c.id 
+        // FROM customers c
+        // LEFT JOIN tickets t ON t.cust_id = c.id
         // LEFT JOIN ticket_customfields ct ON ct.ticket_id = t.id
         // GROUP BY c.id";
         // $data['customers'] = DB::select($customer);
@@ -562,6 +565,9 @@ class AdminprofileController extends Controller
         $title = Apptitle::first();
         $data['title'] = $title;
 
+        $Organizations = Organizations::all();
+        $data['organizations'] = $Organizations;
+
         $footertext = Footertext::first();
         $data['footertext'] = $footertext;
 
@@ -618,6 +624,20 @@ class AdminprofileController extends Controller
         $customers->username = $customer->firstname.' '.$customer->lastname;
         $customers->update();
 
+
+        // insert data in CustomerOrganization
+
+                // insert data in CustomerOrganization
+        if($request->input('organization_id') != null){
+            $organizationIds = $request->input('organization_id');
+            foreach($organizationIds as $organizationId){
+                CustomerOrganization::updateOrCreate(
+                    ['customer_id' => $customer->id, 'organization_id' => $organizationId],
+                    ['created_by' => auth()->id()]
+                );
+            }
+        }
+
         $customerData = [
             'userpassword' => $request->password,
             'username' => $customer->firstname .' '. $customer->lastname,
@@ -641,6 +661,9 @@ class AdminprofileController extends Controller
         $this->authorize('Customers Edit');
         $user = Customer::where('id', $id)->first();
         $data['user'] = $user;
+
+        $Organizations = Organizations::all();
+        $data['organizations'] = $Organizations;
 
         $country = Countries::all();
         $data['countries'] = $country;
@@ -740,8 +763,20 @@ class AdminprofileController extends Controller
         $user->timezone = $request->input('timezone');
         $user->status = $request->input('status');
         $user->voilated = $request->input('voilated');
+
         $user->update();
         $request->session()->forget('email',$user->email);
+
+        // insert data in CustomerOrganization
+        if($request->input('organization_id') != null){
+            $organizationIds = $request->input('organization_id');
+            foreach($organizationIds as $organizationId){
+                CustomerOrganization::updateOrCreate(
+                    ['customer_id' => $user->id, 'organization_id' => $organizationId],
+                    ['created_by' => auth()->id()]
+                );
+            }
+        }
 
         return redirect('/admin/customer')->with('success', lang('The customer profile was successfully updated.', 'alerts'));
 
@@ -882,8 +917,31 @@ class AdminprofileController extends Controller
         }
 
         return response()->json(['code'=>200, 'success'=> lang('Updated successfully', 'alerts')], 200);
+    }
 
+    public function organizationadd(Request $request){
+       $user_id = Auth::user()->id;
+        $this->authorize('Organization Create');
 
+        Organizations::create([
+            'name' => $request->input('name'),
+            'email' => $request->input('email'),
+            'password' => bcrypt($request->input('password')),
+            'created_by' => $user_id,
+        ]);
+
+        Customer::create([
+            'firstname' => $request->input('name'),
+            'lastname' => '',
+            'email' => $request->input('email'),
+            'username' => $request->input('name'),
+            'status' => 1,
+            'password' => bcrypt($request->input('password')),
+            'userType' => 'Organization',
+            'organization_id' => Organizations::where('email', $request->input('email'))->first()->id,
+        ]);
+
+        return response()->json(['code'=>200,'user_id'=>$user_id,'success'=> lang('Organization added successfully', 'alerts')], 200);
     }
 
 
