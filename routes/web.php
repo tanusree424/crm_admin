@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Admin\TicketMaterialStatusUpadteController;
 use App\Http\Controllers\Admin\TicketProductController;
 use App\Http\Controllers\User\TicketReportController;
+use App\Http\Controllers\Admin\AdminMappingController;
 
 
 
@@ -499,7 +500,7 @@ Route::middleware(ProtectAgainstSpam::class)->group(function () {
             Route::get('mail-to-ticket', 'AdminDashboardController@mailToTicket')->name('admin.mailtotickets.data');
             Route::post('mailtotickets/move', 'AdminDashboardController@moveToDashboard')->name('admin.mailtotickets.move');
             Route::post('save-followup',[AdminDashboardController::class,'saveFollowup'])->name('admin.saveFollowup');
-
+            Route::post('/admin/ticket/assign', [AdminDashboardController::class, 'assignTicket'])->name('admin.assignTicket');
 			Route::get('allticketsdata', 'AdminDashboardController@allticketsdata')->name('admin.allticketsdata');
 			Route::get('recentticketsdata', 'AdminDashboardController@recentticketsdata')->name('admin.recentticketsdata');
 			Route::get('allcustomerdata', 'AdminprofileController@allcustomerdata')->name('admin.allcustomerdata');
@@ -511,8 +512,20 @@ Route::middleware(ProtectAgainstSpam::class)->group(function () {
 			Route::get('totalassigneditemsdata', 'AdminDashboardController@totalassignedgetData')->name('admin.totalassigned');
 			Route::post('notifystatus', 'AdminDashboardController@notifystatus')->name('admin.notifystatus');
 			Route::post('notifysearch', 'AdminDashboardController@notifysearch')->name('admin.notifysearch');
+            //Mapping Routes
+             Route::get('user-mapping', [AdminMappingController::class, 'index'])->name('admin.mapping.index');
+            Route::get('user-mapping/create',[AdminMappingController::class, 'create'])->name('admin.mapping.create');
+            Route::post('user-mapping', [AdminMappingController::class,'store'])->name('admin.mapping.store');
+            Route::get('mapping-data', [AdminMappingController::class, 'indexData'])->name('user-mapping.data');
+            Route::get('mapping/{id}/edit', [AdminMappingController::class, 'edit'])->name('mapping.edit');     // AJAX edit modal
+            Route::put('mapping/{id}', [AdminMappingController::class, 'update'])->name('mapping.update');       // AJAX update
+            Route::post('mapping/massdelete', [AdminMappingController::class, 'massDelete'])->name('admin.mapping.massdelete');
+            Route::delete('mapping/{id}', [AdminMappingController::class, 'destroy'])->name('mapping.destroy');
+            Route::post('mapping/{id}/toggle-status', [AdminMappingController::class, 'toggleStatus'])->name('mapping.toggleStatus');
+			 Route::get('mapping-import',[AdminMappingController::class,'mappingImportIndex'])->name('mapping.import');
+             Route::post('mapping/import-excel', [AdminMappingController::class, 'mappingcsv'])->name('mapping.import.excel');
 
-			Route::get('allmyassignedTickets', 'AdminDashboardController@allmyassignedTickets')->name('admin.allmyassignedTickets');
+            Route::get('allmyassignedTickets', 'AdminDashboardController@allmyassignedTickets')->name('admin.allmyassignedTickets');
 			Route::get('allmyclosedtickets', 'AdminTicketViewController@allmyclosedtickets')->name('admin.allmyclosedtickets');
 			Route::get('allmyselfassignedTickets', 'AdminTicketViewController@allmyselfassignedTickets')->name('admin.allmyselfassignedTickets');
 			Route::get('allmysuspendedTickets', 'AdminTicketViewController@allmysuspendedTickets')->name('admin.allmysuspendedTickets');

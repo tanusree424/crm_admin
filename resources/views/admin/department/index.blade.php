@@ -127,7 +127,7 @@
 							@endsection
 
 
-                            @section('scripts')
+    @section('scripts')
 
 		<!-- INTERNAL Vertical-scroll js-->
 		<script src="{{asset('assets/plugins/vertical-scroll/jquery.bootstrap.newsbox.js')}}"></script>
@@ -192,10 +192,10 @@
                         next: next
                         },
                         emptyTable : nodata,
-                        infoFiltered: `${maxRecordfilter} _MAX_ ${maxRecords}`,
-                        info: `${showing} _PAGE_ ${ofval} _PAGES_`,
+                        infoFiltered: ${maxRecordfilter} _MAX_ ${maxRecords},
+                        info: ${showing} _PAGE_ ${ofval} _PAGES_,
                         infoEmpty: noentries,
-                        lengthMenu: `${show} _MENU_ ${entries} `,
+                        lengthMenu: ${show} _MENU_ ${entries} ,
                     },
                     order:[],
                     columnDefs: [
@@ -211,7 +211,7 @@
 					});
 					if(id.length > 0){
 						swal({
-							title: `{{lang('Are you sure you want to continue?', 'alerts')}}`,
+							title: {{lang('Are you sure you want to continue?', 'alerts')}},
 							text: "{{lang('This might erase your records permanently', 'alerts')}}",
 							icon: "warning",
 							buttons: true,
@@ -293,7 +293,7 @@
 			// edit department
             function editdepartment(event) {
                 var id  = $(event).data("id");
-                let _url = `{{url('/admin/department/edit/${id}')}}`;
+                let _url = {{url('/admin/department/edit/${id}')}};
                 $('#departmentnameError').text('');
 
 				$(".modal-title").text('{{lang('Edit department')}}');
@@ -320,10 +320,10 @@
 			// Delete department
             function deletedepartment(event) {
                 var id  = $(event).data("id");
-                let _url = `{{url('/admin/department/delete/${id}')}}`;
+                let _url = {{url('/admin/department/delete/${id}')}};
                 let _token   = $('meta[name="csrf-token"]').attr('content');
 				swal({
-					title: `{{lang('Are you sure you want to continue?', 'alerts')}}`,
+					title: {{lang('Are you sure you want to continue?', 'alerts')}},
 					text: "{{lang('This might erase your records permanently', 'alerts')}}",
 					icon: "warning",
 					buttons: true,
@@ -363,7 +363,7 @@
 					setTimeout(function(){
 						$('#btnsave').prop('disabled', false);
 					}, fewSeconds*1000);
-                let _url = `{{route('department.create')}}`;
+                let _url = {{route('department.create')}};
                 let _token   = $('meta[name="csrf-token"]').attr('content');
                 $.ajax({
                     url:_url,

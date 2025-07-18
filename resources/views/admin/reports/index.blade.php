@@ -20,45 +20,49 @@
     <!--Reports List-->
     <div class="row row-deck">
         @if (Auth::user()->dashboard == 'Admin')
-        <div class="col-xl-4 col-md-12 col-sm-12 col-lg-12">
-            <div class="card">
-                <div class="card-header d-flex border-0">
-                    <h4 class="card-title">{{ lang('Employees') }}</h4>
-                    <div class="card-options">
-                        <a class="btn btn-light btn-sm" href="{{ route('employee') }}">{{ lang('View All') }}</a>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div id="userchart" class=""></div>
-                    <div class="sales-chart pt-5 pb-3 d-flex mx-auto text-center justify-content-center ">
-                        <div class="d-flex me-5"><span class="dot-label bg-success me-2 my-auto"></span>{{ lang('Active') }}
-                        </div>
-                        <div class="d-flex"><span class="dot-label bg-warning  me-2 my-auto"></span>{{ lang('Inactive') }}
+            <div class="col-xl-4 col-md-12 col-sm-12 col-lg-12">
+                <div class="card">
+                    <div class="card-header d-flex border-0">
+                        <h4 class="card-title">{{ lang('Employees') }}</h4>
+                        <div class="card-options">
+                            <a class="btn btn-light btn-sm" href="{{ route('employee') }}">{{ lang('View All') }}</a>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-4 col-md-12 col-sm-12 col-lg-12">
-            <div class="card">
-                <div class="card-header d-flex border-0">
-                    <h4 class="card-title">{{ lang('Customers') }}</h4>
-                    <div class="card-options">
-                        <a class="btn btn-light btn-sm" href="{{ route('admin.customer') }}">{{ lang('View All') }}</a>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div id="customerchart" class=""></div>
-                    <div class="sales-chart pt-5 pb-3 d-flex mx-auto text-center justify-content-center ">
-                        <div class="d-flex me-5"><span
-                                class="dot-label bg-success me-2 my-auto"></span>{{ lang('Active') }}
-                        </div>
-                        <div class="d-flex"><span class="dot-label bg-warning  me-2 my-auto"></span>{{ lang('Inactive') }}
+                    <div class="card-body">
+                        <div id="userchart" class=""></div>
+                        <div class="sales-chart pt-5 pb-3 d-flex mx-auto text-center justify-content-center ">
+                            <div class="d-flex me-5"><span
+                                    class="dot-label bg-success me-2 my-auto"></span>{{ lang('Active') }}
+                            </div>
+                            <div class="d-flex"><span
+                                    class="dot-label bg-warning  me-2 my-auto"></span>{{ lang('Inactive') }}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+            <div class="col-xl-4 col-md-12 col-sm-12 col-lg-12">
+                <div class="card">
+                    <div class="card-header d-flex border-0">
+                        <h4 class="card-title">{{ lang('Customers') }}</h4>
+                        <div class="card-options">
+                            <a class="btn btn-light btn-sm"
+                                href="{{ route('admin.customer') }}">{{ lang('View All') }}</a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="customerchart" class=""></div>
+                        <div class="sales-chart pt-5 pb-3 d-flex mx-auto text-center justify-content-center ">
+                            <div class="d-flex me-5"><span
+                                    class="dot-label bg-success me-2 my-auto"></span>{{ lang('Active') }}
+                            </div>
+                            <div class="d-flex"><span
+                                    class="dot-label bg-warning  me-2 my-auto"></span>{{ lang('Inactive') }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         @endif
         <div class="col-xl-4 col-md-12 col-sm-12 col-lg-12">
             <div class="card">
@@ -66,17 +70,26 @@
                     <h4 class="card-title">{{ lang('Ticket') }}</h4>
                     <div class="card-options">
                         <a class="btn btn-light btn-sm" href="{{ route('admin.alltickets') }}">{{ lang('View All') }}</a>
-                    </div>  
+                    </div>
                     <div class="card-options">
-                        <a class="btn btn-light btn-sm" style="font-size:10px !important;" href="{{ route('admin.alltickets') }}?download=1&ptype=purifier"><i class="fe fe-download pe-lg-2" style="font-size:10px;"></i>{{ lang('Air Purifier') }}</a>
-                    </div>  
-                    <div class="card-options">    
-                        <a class="btn btn-light btn-sm" style="font-size:10px !important;" href="{{ route('admin.alltickets') }}?download=1&ptype=electronics"><i class="fe fe-download pe-lg-2" style="font-size:10px;"></i>{{ lang('Electronics') }}</a>
+                        <a class="btn btn-light btn-sm" style="font-size:10px !important;"
+                            href="{{ route('admin.alltickets') }}?download=1&ptype=technical"><i
+                                class="fe fe-download pe-lg-2" style="font-size:10px;"></i>{{ lang('Technical') }}</a>
+                    </div>
+                    <div class="card-options">
+                        <a class="btn btn-light btn-sm" style="font-size:10px !important;"
+                            href="{{ route('admin.alltickets') }}?download=1&ptype=functional"><i
+                                class="fe fe-download pe-lg-2" style="font-size:10px;"></i>{{ lang('Functional') }}</a>
                     </div>
 
                 </div>
                 <div class="card-body">
-                    <div id="ticketchart" class=""></div>
+                    <div class="d-flex align-items-center gap-2 ms-auto">
+                        <input type="date" id="from_date" class="form-control form-control-sm" placeholder="From Date">
+                        <input type="date" id="to_date" class="form-control form-control-sm" placeholder="To Date">
+                    </div>
+
+                    <div id="ticketchart" class="mt-4"></div>
                     <div class="sales-chart pt-5 pb-3 d-md-flex mx-auto text-center justify-content-center ">
                         <div class="d-flex me-2"><span
                                 class="dot-label badge-burnt-orange me-2 my-auto"></span>{{ lang('New') }}
@@ -97,124 +110,150 @@
             </div>
         </div>
         @if (Auth::user()->dashboard == 'Admin')
-        <div class="col-xl-4 col-md-12 col-sm-12 col-lg-12">
-            <div class="card">
-                <div class="card-header border-bottom-0">
-                    <h3 class="card-title">
-                        {{ lang('Ticket Priority') }}
-                    </h3>
-                </div>
-                <div class="card-body pb-8">
-                    <div id="priority" class="mx-auto apex-dount"></div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-4 col-md-12 col-sm-12 col-lg-12">
-            <div class="card">
-                <div class="card-header d-flex border-bottom-0">
-                    <h3 class="card-title">
-                        {{ lang('Knowledge Base') }}
-                    </h3>
-                    <div class="card-options">
-                        <a class="btn btn-light btn-sm"
-                            href="{{ route('admin.article.index') }}">{{ lang('View All') }}</a>
+            <div class="col-xl-4 col-md-12 col-sm-12 col-lg-12">
+                <div class="card">
+                    <div class="card-header border-bottom-0">
+                        <h3 class="card-title">
+                            {{ lang('Ticket Priority') }}
+                        </h3>
+                    </div>
+                    <div class="card-body pb-8">
+                        <div id="priority" class="mx-auto apex-dount"></div>
                     </div>
                 </div>
-                <div class="card-body pb-8">
-                    <div id="article" class="mx-auto apex-dount"></div>
-                </div>
             </div>
-        </div>
-
-
-        <div class="col-xl-4 col-md-12 col-sm-12 col-lg-12">
-            <div class="card">
-                <div class="card-header d-flex border-bottom-0">
-                    <h3 class="card-title">{{ lang('Ratings For Employee') }}</h3>
-                    <div class="card-options">
-                        <a href="{{ route('admin.ticketreports') }}"
-                            class="btn btn-light btn-sm">{{ lang('View All') }}</a>
+            <div class="col-xl-4 col-md-12 col-sm-12 col-lg-12">
+                <div class="card">
+                    <div class="card-header d-flex border-bottom-0">
+                        <h3 class="card-title">
+                            {{ lang('Knowledge Base') }}
+                        </h3>
+                        <div class="card-options">
+                            <a class="btn btn-light btn-sm"
+                                href="{{ route('admin.article.index') }}">{{ lang('View All') }}</a>
+                        </div>
+                    </div>
+                    <div class="card-body pb-8">
+                        <div id="article" class="mx-auto apex-dount"></div>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div class="list-group">
-                        @foreach ($users as $user)
-                            <a href="javascript:void(0);">
-                                <div class="list-group-item border-0 px-0 pt-0">
-                                    <div class="media mt-0 align-items-center">
-                                        @if ($user->image == null)
-                                            <img src="{{ asset('uploads/profile/user-profile.png') }}"
-                                                class="avatar-lg rounded-circle me-3 my-auto" alt="">
-                                        @else
-                                            <img src="{{ asset('uploads/profile/' . $user->image) }}"
-                                                class="avatar-lg rounded-circle me-3 my-auto" alt="">
-                                        @endif
+            </div>
 
-                                        <div class="media-body">
-                                            <div class="d-flex align-items-center">
-                                                <div class="mt-0">
-                                                    @if (!empty($user->getRoleNames()[0]))
-                                                        <h5 class="mb-0 fs-13 font-weight-sembold text-dark">
-                                                            {{ $user->name }}
-                                                        </h5>
-                                                        <p class="mb-0 fs-12 text-muted">{{ $user->getRoleNames()[0] }}
-                                                        </p>
-                                                    @else
-                                                        <h5 class="mb-0 fs-13 font-weight-sembold text-dark">
-                                                            {{ $user->name }}
-                                                        </h5>
-                                                    @endif
 
+            <div class="col-xl-4 col-md-12 col-sm-12 col-lg-12">
+                <div class="card">
+                    <div class="card-header d-flex border-bottom-0">
+                        <h3 class="card-title">{{ lang('Ratings For Employee') }}</h3>
+                        <div class="card-options">
+                            <a href="{{ route('admin.ticketreports') }}"
+                                class="btn btn-light btn-sm">{{ lang('View All') }}</a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            @foreach ($users as $user)
+                                <a href="javascript:void(0);">
+                                    <div class="list-group-item border-0 px-0 pt-0">
+                                        <div class="media mt-0 align-items-center">
+                                            @if ($user->image == null)
+                                                <img src="{{ asset('uploads/profile/user-profile.png') }}"
+                                                    class="avatar-lg rounded-circle me-3 my-auto" alt="">
+                                            @else
+                                                <img src="{{ asset('uploads/profile/' . $user->image) }}"
+                                                    class="avatar-lg rounded-circle me-3 my-auto" alt="">
+                                            @endif
+
+                                            <div class="media-body">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="mt-0">
+                                                        @if (!empty($user->getRoleNames()[0]))
+                                                            <h5 class="mb-0 fs-13 font-weight-sembold text-dark">
+                                                                {{ $user->name }}
+                                                            </h5>
+                                                            <p class="mb-0 fs-12 text-muted">
+                                                                {{ $user->getRoleNames()[0] }}
+                                                            </p>
+                                                        @else
+                                                            <h5 class="mb-0 fs-13 font-weight-sembold text-dark">
+                                                                {{ $user->name }}
+                                                            </h5>
+                                                        @endif
+
+                                                    </div>
+                                                    @php
+
+                                                        $avgrating1 = App\Models\Employeerating::where(
+                                                            'user_id',
+                                                            $user->id,
+                                                        )
+                                                            ->where('rating', '1')
+                                                            ->count();
+                                                        $avgrating2 = App\Models\Employeerating::where(
+                                                            'user_id',
+                                                            $user->id,
+                                                        )
+                                                            ->where('rating', '2')
+                                                            ->count();
+                                                        $avgrating3 = App\Models\Employeerating::where(
+                                                            'user_id',
+                                                            $user->id,
+                                                        )
+                                                            ->where('rating', '3')
+                                                            ->count();
+                                                        $avgrating4 = App\Models\Employeerating::where(
+                                                            'user_id',
+                                                            $user->id,
+                                                        )
+                                                            ->where('rating', '4')
+                                                            ->count();
+                                                        $avgrating5 = App\Models\Employeerating::where(
+                                                            'user_id',
+                                                            $user->id,
+                                                        )
+                                                            ->where('rating', '5')
+                                                            ->count();
+
+                                                        $avgr =
+                                                            5 * $avgrating5 +
+                                                            4 * $avgrating4 +
+                                                            3 * $avgrating3 +
+                                                            2 * $avgrating2 +
+                                                            1 * $avgrating1;
+                                                        $avggr =
+                                                            $avgrating1 +
+                                                            $avgrating2 +
+                                                            $avgrating3 +
+                                                            $avgrating4 +
+                                                            $avgrating5;
+
+                                                        if ($avggr == 0) {
+                                                            $avggr = 1;
+                                                            $avg = $avgr / $avggr;
+                                                        } else {
+                                                            $avg = $avgr / $avggr;
+                                                        }
+
+                                                        $rating = $avg;
+                                                    @endphp
+
+
+
+                                                    <span
+                                                        class="rating-stars block uhelp-rating ms-auto w-auto allemployeerating"
+                                                        data-rating="{{ $rating }}">
+                                                    </span>
                                                 </div>
-                                                @php
-
-                                                    $avgrating1 = App\Models\Employeerating::where('user_id', $user->id)
-                                                        ->where('rating', '1')
-                                                        ->count();
-                                                    $avgrating2 = App\Models\Employeerating::where('user_id', $user->id)
-                                                        ->where('rating', '2')
-                                                        ->count();
-                                                    $avgrating3 = App\Models\Employeerating::where('user_id', $user->id)
-                                                        ->where('rating', '3')
-                                                        ->count();
-                                                    $avgrating4 = App\Models\Employeerating::where('user_id', $user->id)
-                                                        ->where('rating', '4')
-                                                        ->count();
-                                                    $avgrating5 = App\Models\Employeerating::where('user_id', $user->id)
-                                                        ->where('rating', '5')
-                                                        ->count();
-
-                                                    $avgr = 5 * $avgrating5 + 4 * $avgrating4 + 3 * $avgrating3 + 2 * $avgrating2 + 1 * $avgrating1;
-                                                    $avggr = $avgrating1 + $avgrating2 + $avgrating3 + $avgrating4 + $avgrating5;
-
-                                                    if ($avggr == 0) {
-                                                        $avggr = 1;
-                                                        $avg = $avgr / $avggr;
-                                                    } else {
-                                                        $avg = $avgr / $avggr;
-                                                    }
-
-                                                    $rating = $avg;
-                                                @endphp
-
-
-
-                                                <span
-                                                    class="rating-stars block uhelp-rating ms-auto w-auto allemployeerating"
-                                                    data-rating="{{ $rating }}">
-                                                </span>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </a>
-                        @endforeach
+                                </a>
+                            @endforeach
 
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        @endif                                            
+        @endif
     </div>
     <!--End Reports List-->
 @endsection

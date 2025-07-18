@@ -505,95 +505,95 @@ class AdminDashboardController extends Controller
 
 public function allticketsdata(Request $request)
 {
-    if (Auth::user()->dashboard == 'Admin') {
-        $query = Ticket::select('tickets.*', 'groups_categories.group_id', 'groups_users.users_id', 'ticket_customfields.values')
-            ->leftJoin('groups_categories', 'groups_categories.category_id', 'tickets.category_id')
-            ->leftJoin('customers', 'customers.id', 'tickets.cust_id')
-            ->leftJoin('ticket_customfields', function ($join) {
-                $join->on('ticket_customfields.ticket_id', '=', 'tickets.id')
-                    ->where('ticket_customfields.fieldnames', '=', 'Mobile no.');
-            })
-            ->leftJoin('groups_users', 'groups_users.groups_id', 'groups_categories.group_id')
-            ->whereNull('tickets.emailticketfile')
-            ->latest('tickets.updated_at');
-    } elseif (Auth::user()->dashboard === 'Employee' || Auth::user()->dashboard === null) {
-        $groupexists = Groupsusers::where('users_id', Auth::id())->exists();
+            if (Auth::user()->dashboard == 'Admin') {
+                $query = Ticket::select('tickets.*', 'groups_categories.group_id', 'groups_users.users_id', 'ticket_customfields.values')
+                    ->leftJoin('groups_categories', 'groups_categories.category_id', 'tickets.category_id')
+                    ->leftJoin('customers', 'customers.id', 'tickets.cust_id')
+                    ->leftJoin('ticket_customfields', function ($join) {
+                        $join->on('ticket_customfields.ticket_id', '=', 'tickets.id')
+                            ->where('ticket_customfields.fieldnames', '=', 'Mobile no.');
+                    })
+                    ->leftJoin('groups_users', 'groups_users.groups_id', 'groups_categories.group_id')
+                    ->whereNull('tickets.emailticketfile')
+                    ->latest('tickets.updated_at');
+            } elseif (Auth::user()->dashboard === 'Employee' || Auth::user()->dashboard === null) {
+                $groupexists = Groupsusers::where('users_id', Auth::id())->exists();
 
-        if ($groupexists) {
-            $query = Ticket::select('tickets.*', 'groups_categories.group_id', 'groups_users.users_id', 'ticket_customfields.values')
-                ->leftJoin('groups_categories', 'groups_categories.category_id', 'tickets.category_id')
-                ->leftJoin('ticketassignchildren', 'tickets.id', 'ticketassignchildren.ticket_id')
-                ->leftJoin('customers', 'customers.id', 'tickets.cust_id')
-                ->leftJoin('ticket_customfields', function ($join) {
-                    $join->on('ticket_customfields.ticket_id', '=', 'tickets.id')
-                        ->where('ticket_customfields.fieldnames', '=', 'Mobile no.');
-                })
-                ->leftJoin('groups_users', 'groups_users.groups_id', 'groups_categories.group_id')
-                ->whereNotNull('groups_users.users_id')
-                ->where('ticketassignchildren.toassignUser_id', Auth::id())
-                ->where('groups_users.users_id', Auth::id())
-                ->whereNull('tickets.emailticketfile')
-                ->latest('tickets.updated_at');
-        } else {
-            $query = Ticket::select('tickets.*', 'groups_categories.group_id', 'groups_users.users_id', 'ticket_customfields.values')
-                ->leftJoin('groups_categories', 'groups_categories.category_id', 'tickets.category_id')
-                ->leftJoin('ticketassignchildren', 'tickets.id', 'ticketassignchildren.ticket_id')
-                ->leftJoin('customers', 'customers.id', 'tickets.cust_id')
-                ->leftJoin('ticket_customfields', function ($join) {
-                    $join->on('ticket_customfields.ticket_id', '=', 'tickets.id')
-                        ->where('ticket_customfields.fieldnames', '=', 'Mobile no.');
-                })
-                ->leftJoin('groups_users', 'groups_users.groups_id', 'groups_categories.group_id')
-                ->whereNull('groups_users.users_id')
-                ->where('ticketassignchildren.toassignUser_id', Auth::id())
-                ->whereNull('tickets.emailticketfile')
-                ->latest('tickets.updated_at');
-        }
-    }
+                if ($groupexists) {
+                    $query = Ticket::select('tickets.*', 'groups_categories.group_id', 'groups_users.users_id', 'ticket_customfields.values')
+                        ->leftJoin('groups_categories', 'groups_categories.category_id', 'tickets.category_id')
+                        ->leftJoin('ticketassignchildren', 'tickets.id', 'ticketassignchildren.ticket_id')
+                        ->leftJoin('customers', 'customers.id', 'tickets.cust_id')
+                        ->leftJoin('ticket_customfields', function ($join) {
+                            $join->on('ticket_customfields.ticket_id', '=', 'tickets.id')
+                                ->where('ticket_customfields.fieldnames', '=', 'Mobile no.');
+                        })
+                        ->leftJoin('groups_users', 'groups_users.groups_id', 'groups_categories.group_id')
+                        ->whereNotNull('groups_users.users_id')
+                        ->where('ticketassignchildren.toassignUser_id', Auth::id())
+                        ->where('groups_users.users_id', Auth::id())
+                        ->whereNull('tickets.emailticketfile')
+                        ->latest('tickets.updated_at');
+                } else {
+                    $query = Ticket::select('tickets.*', 'groups_categories.group_id', 'groups_users.users_id', 'ticket_customfields.values')
+                        ->leftJoin('groups_categories', 'groups_categories.category_id', 'tickets.category_id')
+                        ->leftJoin('ticketassignchildren', 'tickets.id', 'ticketassignchildren.ticket_id')
+                        ->leftJoin('customers', 'customers.id', 'tickets.cust_id')
+                        ->leftJoin('ticket_customfields', function ($join) {
+                            $join->on('ticket_customfields.ticket_id', '=', 'tickets.id')
+                                ->where('ticket_customfields.fieldnames', '=', 'Mobile no.');
+                        })
+                        ->leftJoin('groups_users', 'groups_users.groups_id', 'groups_categories.group_id')
+                        ->whereNull('groups_users.users_id')
+                        ->where('ticketassignchildren.toassignUser_id', Auth::id())
+                        ->whereNull('tickets.emailticketfile')
+                        ->latest('tickets.updated_at');
+                }
+            }
 
-    if ($request->has('search') && !empty($request->search['value'])) {
-        $searchValue = '%' . $request->search['value'] . '%';
-        $query->where(function ($q) use ($searchValue) {
-            $q->where('tickets.subject', 'like', $searchValue)
-                ->orWhere('ticket_customfields.values', 'like', $searchValue)
-                ->orWhere('tickets.ticket_id', 'like', $searchValue)
-                ->orWhereHas('cust', function ($qs) use ($searchValue) {
-                    $qs->where('firstname', 'like', $searchValue)
-                        ->orWhere('lastname', 'like', $searchValue);
+            if ($request->has('search') && !empty($request->search['value'])) {
+                $searchValue = '%' . $request->search['value'] . '%';
+                $query->where(function ($q) use ($searchValue) {
+                    $q->where('tickets.subject', 'like', $searchValue)
+                        ->orWhere('ticket_customfields.values', 'like', $searchValue)
+                        ->orWhere('tickets.ticket_id', 'like', $searchValue)
+                        ->orWhereHas('cust', function ($qs) use ($searchValue) {
+                            $qs->where('firstname', 'like', $searchValue)
+                                ->orWhere('lastname', 'like', $searchValue);
+                        });
                 });
-        });
-    }
+            }
 
-    return DataTables::of($query)
-        ->addIndexColumn() // ✅ Enables DT_RowIndex for serial number
-        ->addColumn('serial', function ($row) {
-            return ''; // will be replaced by DT_RowIndex automatically
-        })
-        ->addColumn('id', function ($row) {
-            $html = '<a href="' . url('admin/ticket-view/' . $row->ticket_id) . '" class="fs-14 d-block font-weight-semibold">' . e($row->subject) . '</a>';
-            $html .= '<ul class="fs-13 font-weight-normal d-flex custom-ul">';
-            $html .= '<li class="pe-2 text-muted">#' . e($row->ticket_id) . '</li>';
-            $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" title="' . lang('Date') . '"><i class="fe fe-calendar me-1 fs-14"></i>' . $row->created_at->timezone(Auth::user()->timezone)->format(setting('date_format')) . '</li>';
-            $html .= '</ul>';
-            return $html;
-        })
-        ->addColumn('custname', function ($row) {
-            return e($row->cust->username) . ' (' . lang($row->cust->userType) . ')';
-        })
-        ->addColumn('mobilenumber', function ($row) {
-            return e($row->values);
-        })
-        ->addColumn('status', function ($row) {
-            $statusClass = match ($row->status) {
-                'New' => 'burnt-orange',
-                'Re-Open' => 'teal',
-                'Inprogress' => 'info',
-                'On-Hold' => 'warning',
-                default => 'danger',
-            };
-            return '<span class="badge badge-' . $statusClass . '">' . lang($row->status) . '</span>';
-        })
-        ->addColumn('assignedTo', function ($row) {
+            return DataTables::of($query)
+                ->addIndexColumn() // ✅ Enables DT_RowIndex for serial number
+                ->addColumn('serial', function ($row) {
+                    return ''; // will be replaced by DT_RowIndex automatically
+                })
+                ->addColumn('id', function ($row) {
+                    $html = '<a href="' . url('admin/ticket-view/' . $row->ticket_id) . '" class="fs-14 d-block font-weight-semibold">' . e($row->subject) . '</a>';
+                    $html .= '<ul class="fs-13 font-weight-normal d-flex custom-ul">';
+                    $html .= '<li class="pe-2 text-muted">#' . e($row->ticket_id) . '</li>';
+                    $html .= '<li class="px-2 text-muted" data-bs-toggle="tooltip" title="' . lang('Date') . '"><i class="fe fe-calendar me-1 fs-14"></i>' . $row->created_at->timezone(Auth::user()->timezone)->format(setting('date_format')) . '</li>';
+                    $html .= '</ul>';
+                    return $html;
+                })
+                ->addColumn('custname', function ($row) {
+                    return e($row->cust->username) . ' (' . lang($row->cust->userType) . ')';
+                })
+                ->addColumn('mobilenumber', function ($row) {
+                    return e($row->values);
+                })
+                ->addColumn('status', function ($row) {
+                    $statusClass = match ($row->status) {
+                        'New' => 'burnt-orange',
+                        'Re-Open' => 'teal',
+                        'Inprogress' => 'info',
+                        'On-Hold' => 'warning',
+                        default => 'danger',
+                    };
+                    return '<span class="badge badge-' . $statusClass . '">' . lang($row->status) . '</span>';
+                })
+            ->addColumn('assignedTo', function ($row) {
                 $assignedTo = '';
                 if(Auth::user()->can('Ticket Assign')){
                     if($row->status == 'Suspend' || $row->status == 'Closed'){
@@ -662,33 +662,52 @@ public function allticketsdata(Request $request)
 
                 return $assignedTo;
             })
-                ->addColumn('followup', function ($row) {
-                    return '<button class="btn btn-sm btn-warning followup-btn"
 
-                                data-id="' . $row->id . '"
+    //         ->addColumn('assignedTo', function ($row) {
+    //                     $users = \App\Models\User::where('role', 'Agent')->get(); // Or whatever logic you use
 
-                                data-username="' . e(Auth::user()->name) . '"
-                                data-useremail="' . e(Auth::user()->email) . '">
-                                <i class="fe fe-message-square me-1"></i> Follow Up
-                            </button>';
-})
+    //                     if (Auth::user()->can('Ticket Assign') && !in_array($row->status, ['Suspend', 'Closed'])) {
+    //                         $select = '<select class="form-select select2-assign" data-ticket-id="' . $row->id . '" style="width: 150px;">';
+    //                         $select .= '<option value="">-- Select User --</option>';
+    //                         foreach ($users as $user) {
+    //                             $select .= '<option value="' . $user->id . '">' . e($user->name) . '</option>';
+    //                         }
+    //                         $select .= '</select>';
+    //                         return $select;
+    //                     }
+
+    //                     return '<span class="badge bg-secondary">N/A</span>';
+    // })
 
 
+                    // Follow up
+            ->addColumn('followup', function ($row) {
+                            return '<button class="btn btn-sm btn-warning followup-btn"
 
+                                        data-id="' . $row->id . '"
 
-        ->addColumn('action', function ($row) {
-            $action = '';
-            if (Auth::user()->can('Ticket Edit')) {
-                $action .= '<a href="' . url('admin/ticket-view/' . $row->ticket_id) . '" class="btn btn-sm action-btns"><i class="feather feather-eye text-primary" data-bs-toggle="tooltip" title="' . lang('Edit') . '"></i></a>';
-            }
-            if (Auth::user()->can('Ticket Delete')) {
-                $action .= '<a href="javascript:void(0)" data-id="' . $row->id . '" class="btn btn-sm action-btns" id="show-delete"><i class="feather feather-trash-2 text-danger" data-bs-toggle="tooltip" title="' . lang('Delete') . '"></i></a>';
-            }
-            return $action;
+                                        data-username="' . e(Auth::user()->name) . '"
+                                        data-useremail="' . e(Auth::user()->email) . '">
+                                        <i class="fe fe-message-square me-1"></i> Follow Up
+                                    </button>';
         })
-        ->rawColumns(['serial', 'id', 'custname', 'mobilenumber', 'status', 'assignedTo', 'followup', 'action'])
 
-        ->make(true);
+
+
+
+                ->addColumn('action', function ($row) {
+                    $action = '';
+                    if (Auth::user()->can('Ticket Edit')) {
+                        $action .= '<a href="' . url('admin/ticket-view/' . $row->ticket_id) . '" class="btn btn-sm action-btns"><i class="feather feather-eye text-primary" data-bs-toggle="tooltip" title="' . lang('Edit') . '"></i></a>';
+                    }
+                    if (Auth::user()->can('Ticket Delete')) {
+                        $action .= '<a href="javascript:void(0)" data-id="' . $row->id . '" class="btn btn-sm action-btns" id="show-delete"><i class="feather feather-trash-2 text-danger" data-bs-toggle="tooltip" title="' . lang('Delete') . '"></i></a>';
+                    }
+                    return $action;
+                })
+                ->rawColumns(['serial', 'id', 'custname', 'mobilenumber', 'status', 'assignedTo', 'followup', 'action'])
+
+                ->make(true);
 }
 
 
@@ -3041,66 +3060,79 @@ public function mailToTicket(Request $request)
         return view('admin.notification.viewnotification')->with($data);
    }
 
-   public function notifystatus(Request $request)
-   {
-       $status = $request->statusnotify;
-       if(!$status){
-            $notifications = auth()->user()->notifications()->paginate('10')->groupBy(function($date) {
-                return \Carbon\Carbon::parse($date->created_at)->format('Y-m-d');
-            });
-       }
-       else{
-            $notifications =  auth()->user()->notifications()->whereIn('data->status', $status)->paginate('10')->groupBy(function($date) {
-                return \Carbon\Carbon::parse($date->created_at)->format('Y-m-d');
-            });
-       }
+//    public function notifystatus(Request $request)
+//    {
+//        $status = $request->statusnotify;
+//        if(!$status){
+//             $notifications = auth()->user()->notifications()->paginate('10')->groupBy(function($date) {
+//                 return \Carbon\Carbon::parse($date->created_at)->format('Y-m-d');
+//             });
+//        }
+//        else{
+//             $notifications =  auth()->user()->notifications()->whereIn('data->status', $status)->paginate('10')->groupBy(function($date) {
+//                 return \Carbon\Carbon::parse($date->created_at)->format('Y-m-d');
+//             });
+//        }
 
-       $title = Apptitle::first();
-        $data['title'] = $title;
+//        $title = Apptitle::first();
+//         $data['title'] = $title;
 
-        $footertext = Footertext::first();
-        $data['footertext'] = $footertext;
+//         $footertext = Footertext::first();
+//         $data['footertext'] = $footertext;
 
-        $seopage = Seosetting::first();
-        $data['seopage'] = $seopage;
+//         $seopage = Seosetting::first();
+//         $data['seopage'] = $seopage;
 
-       $view = view('admin.notificationpageinclude',compact('notifications','title', 'footertext', 'seopage'))->render();
-       return response()->json(['html'=>$view]);
-   }
+//        $view = view('admin.notificationpageinclude',compact('notifications','title', 'footertext', 'seopage'))->render();
+//        return response()->json(['html'=>$view]);
+//    }
 
-   public function notifysearch(Request $request)
-   {
-       $status = $request->notifysearch;
 
-       if($status){
-            $notifications = auth()->user()->notifications()->where(function($query){
-                $keyword = request()->notifysearch;
-                $query->where('data->title','LIKE', "%{$keyword}%")
-                ->orWhere('data->ticket_id','LIKE', "%{$keyword}%")
-                ->orWhere('data->mailsubject','LIKE', "%{$keyword}%")
-                ->orWhere('data->mailtext','LIKE', "%{$keyword}%");
-            })->get()->groupBy(function($date) {
-                return \Carbon\Carbon::parse($date->created_at)->format('Y-m-d');
-            });
-       }
-       else{
-            $notifications =  auth()->user()->notifications()->paginate()->groupBy(function($date) {
-                return \Carbon\Carbon::parse($date->created_at)->format('Y-m-d');
-            });
-       }
 
-       $title = Apptitle::first();
-        $data['title'] = $title;
 
-        $footertext = Footertext::first();
-        $data['footertext'] = $footertext;
+// Updated NotifySearch Function
 
-        $seopage = Seosetting::first();
-        $data['seopage'] = $seopage;
+public function notifystatus(Request $request)
+{
+    $status = $request->statusnotify;
+    $user = auth()->user();
 
-       $view = view('admin.notificationpageinclude',compact('notifications','title', 'footertext', 'seopage'))->render();
-       return response()->json(['html'=>$view]);
-   }
+    // Base query
+    $notificationsQuery = $user->notifications()->orderBy('created_at', 'desc');
+
+    // If user is an Agent, check if their ID is inside the array of assigned users
+    if ($user->hasRole('Agent')) {
+        $notificationsQuery->where('data->ticketassign', 'yes')
+                           ->whereJsonContains('data->toassignuser_id', $user->id);
+    }
+
+    // Filter by status (if any selected)
+    if ($status) {
+        $notificationsQuery->whereIn('data->status', $status);
+    }
+
+    // Get paginated and group by date
+    $notifications = $notificationsQuery->paginate(10)->getCollection()->groupBy(function ($date) {
+        return \Carbon\Carbon::parse($date->created_at)->format('Y-m-d');
+    });
+
+    // Metadata
+    $title = Apptitle::first();
+    $footertext = Footertext::first();
+    $seopage = Seosetting::first();
+
+    // Render view
+    $view = view('admin.notificationpageinclude', compact('notifications', 'title', 'footertext', 'seopage'))->render();
+
+    return response()->json(['html' => $view]);
+}
+
+
+
+
+
+
+
 
    public function notifydelete(Request $request)
    {
@@ -3417,6 +3449,19 @@ public function saveFollowup(Request $request)
     }
 }
 
+public function assignTicket(Request $request)
+{
+    $request->validate([
+        'ticket_id' => 'required|exists:tickets,id',
+        'user_id' => 'required|exists:users,id',
+    ]);
+
+    $ticket = Ticket::findOrFail($request->ticket_id);
+    $ticket->selfassignuser_id = $request->user_id;
+    $ticket->save();
+
+    return response()->json(['success' => true]);
+}
 
 
 

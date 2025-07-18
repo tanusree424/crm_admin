@@ -91,7 +91,7 @@
                 @endif
             </ul>
             <div class="d-flex ms-6 sprukocnotify">
-                <button class="btn-close ms-2 mt-0 text-warning" data-bs-dismiss="alert" aria-hidden="true">×</button>
+                <button class="btn-close ms-2 mt-0 text-warning" data-bs-dismiss="alert" >×</button>
             </div>
         </div>
     @endif
@@ -513,16 +513,9 @@
         <script src="{{ asset('assets/plugins/datatable/buttonbootstrap.min.js') }}"></script>
         <!-- Bootstrap JS (v5 example) -->
 
-       <!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<!-- DataTables Core -->
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-<!-- DataTables Buttons -->
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+
 
 <!-- JSZip and pdfmake (required for Excel & PDF export) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -973,7 +966,7 @@ $(document).ready(function () {
         </script>
         <script>
 $(document).on('click', '.followup-btn', function () {
-    const ticketId = $(this).data('id'); // ✅ corrected here
+    const ticketId = $(this).data('id'); //  corrected here
     const userName = $(this).data('username');
     const userEmail = $(this).data('useremail');
 
@@ -993,7 +986,7 @@ $('#followupForm').on('submit', function (e) {
 
 
     let formData = {
-    ticket_id: $('#followupTicketId').val(), // ✅ Use `ticket_id` here
+    ticket_id: $('#followupTicketId').val(), // Use `ticket_id` here
     note: $('#followupNote').val(),
     _token: '{{ csrf_token() }}'
 };
@@ -1006,7 +999,7 @@ console.log("Submitting formData:", formData);
     data: formData,
     success: function (response) {
         if (response.success) {
-            alert('✅ Follow-up saved and email sent!');
+            alert('Follow-up saved and email sent!');
             $('#followupModal').modal('hide');
             $('#followupForm')[0].reset();
         } else {

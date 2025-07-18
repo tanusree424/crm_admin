@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Validator;
 use Response;
 use DB;
 use App\Models\Projects_category;
+use Illuminate\Support\Facades\Log;
 
 class ProjectsController extends Controller
 {
@@ -199,40 +200,86 @@ class ProjectsController extends Controller
             return redirect()->back()->with('error', 'Please select file to import data of Project.');
         }
     }
+    // Previous
 
-    public function notificationpage(){
+    // public function notificationpage()
+    // {
 
-        $title = Apptitle::first();
-        $data['title'] = $title;
+    //     $title = Apptitle::first();
+    //     $data['title'] = $title;
 
-        $footertext = Footertext::first();
-        $data['footertext'] = $footertext;
+    //     $footertext = Footertext::first();
+    //     $data['footertext'] = $footertext;
 
-        $seopage = Seosetting::first();
-        $data['seopage'] = $seopage;
+    //     $seopage = Seosetting::first();
+    //     $data['seopage'] = $seopage;
 
-        $notifications = auth()->user()->notifications()->paginate('10')->groupBy(function($date) {
-            return \Carbon\Carbon::parse($date->created_at)->format('Y-m-d');
-        });
-        $data['notifications'] = $notifications;
+    //     $notifications = auth()->user()->notifications()->paginate('10')->groupBy(function($date) {
+    //         return \Carbon\Carbon::parse($date->created_at)->format('Y-m-d');
+    //     });
+    //     $data['notifications'] = $notifications;
 
-        $arraystatus = array('mail');
-        $filter =  auth()->user()->notifications()->whereIn('data->status', $arraystatus)->where(function($query){
-            $query->where('data->title', 'Sed repellendus in eligendi quo.')
-            ->orWhere('data->mailsubject', 'gjfgfgfgfgfghfgghfg');
-        })->get();
-        $filter1 =  auth()->user()->notifications()->where(function($query){
-            $keyword = request()->get('data');
-            $query->where('data->title','LIKE', "%{$keyword}%")
-            ->orWhere('data->mailsubject','LIKE', "%{$keyword}%")
-            ->orWhere('data->mailtext','LIKE', "%{$keyword}%");
-        })->get();
+    //     $arraystatus = array('mail');
+    //     $filter =  auth()->user()->notifications()->whereIn('data->status', $arraystatus)->where(function($query){
+    //         $query->where('data->title', 'Sed repellendus in eligendi quo.')
+    //         ->orWhere('data->mailsubject', 'gjfgfgfgfgfghfgghfg');
+    //     })->get();
+    //     $filter1 =  auth()->user()->notifications()->where(function($query){
+    //         $keyword = request()->get('data');
+    //         $query->where('data->title','LIKE', "%{$keyword}%")
+    //         ->orWhere('data->mailsubject','LIKE', "%{$keyword}%")
+    //         ->orWhere('data->mailtext','LIKE', "%{$keyword}%");
+    //     })->get();
 
-        $filter2 =  auth()->user()->notifications()->whereIn('data->status', $arraystatus)->get();
+    //     $filter2 =  auth()->user()->notifications()->whereIn('data->status', $arraystatus)->get();
 
-        return view('admin.notificationpage')->with($data);
+    //     return view('admin.notificationpage')->with($data);
 
+    // }
+public function notificationpage()
+{
+    $user = auth()->user();
+
+    // Page Metadata
+    $data['title'] = Apptitle::first();
+    $data['footertext'] = Footertext::first();
+    $data['seopage'] = Seosetting::first();
+
+    // Base notifications query
+    $notificationsQuery = $user->notifications()->orderBy('created_at', 'desc');
+
+    // 🔐 If user is an agent, show only assigned tickets
+    if ($user->hasRole('Agent')) {
+        // $notificationsQuery->where('data->ticketassign', 'yes')
+        //     ->where('data->ticketassignee_id', $user->id);
+        $notificationsQuery = $user->notifications()->orderBy('created_at', 'desc');
     }
+
+    // 📄 Paginate results
+    $paginated = $notificationsQuery->paginate(10);
+
+    // 📅 Group notifications by date
+    $grouped = $paginated->getCollection()->groupBy(function ($item) {
+        return \Carbon\Carbon::parse($item->created_at)->format('Y-m-d');
+    });
+
+    // ✅ Replace original collection with grouped version
+    $paginated->setCollection($grouped->flatten());
+
+    $data['notifications'] = $grouped;
+    $data['pagination'] = $paginated;
+
+    return view('admin.notificationpage')->with($data);
+}
+
+
+
+
+
+
+
+
+
 
 
 

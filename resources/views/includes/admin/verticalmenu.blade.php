@@ -137,7 +137,7 @@
                    <li><a href="{{route('admin.onholdticket')}}" class="slide-item">{{lang('On-Hold Tickets', 'Menu')}}</a></li>
                    <li><a href="{{route('admin.overdueticket')}}" class="slide-item">{{lang('Overdue Tickets', 'Menu')}}</a></li>
                    <li><a href="{{route('admin.allassignedtickets')}}" class="slide-item">{{lang('Assigned Tickets', 'Menu')}}</a></li>
-                   <li><a href="{{route('admin.suspendedtickets')}}" class="slide-item">{{lang('Suspended Tickets', 'Menu')}}</a></li>
+                   <li><a href="{{route('admin.suspendedtickets')}}" class="slide-item">{{lang('On-hold Tickets', 'Menu')}}</a></li>
 
 
                </ul>
@@ -365,6 +365,14 @@
                     </a>
                 </li>
 
+            @endcan
+             @can('User Mapping Access')
+            <li class="slide">
+                    <a class="side-menu__item"  href="{{route('admin.mapping.index')}}">
+                        <svg class="sidemenu_icon" xmlns="http://www.w3.org/2000/svg" height="20" width="20"><path d="M3 18v-5h2.25V9.25h4V7H7V2h6v5h-2.25v2.25h4V13H17v5h-6v-5h2.25v-2.25h-6.5V13H9v5ZM8.5 5.5h3v-2h-3Zm-4 11h3v-2h-3Zm8 0h3v-2h-3ZM10 5.604ZM7.5 14.5Zm5 0Z"/></svg>
+                        <span class="side-menu__label">{{lang('Customer Mapping', 'Menu')}}</span>
+                    </a>
+                </li>
             @endcan
 
             @can('Managerole Access')

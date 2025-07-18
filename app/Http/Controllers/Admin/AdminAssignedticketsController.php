@@ -113,26 +113,54 @@ class AdminAssignedticketsController extends Controller
         ];
 
 
-        try{
+        // try{
 
-            $assignee = $calID->ticketassignmutliples;
-            foreach($assignee as $assignees){
-                $user = User::where('id',$assignees->toassignuser_id)->get();
-                foreach($user as $users){
+        //     $assignee = $calID->ticketassignmutliples;
+        //     foreach($assignee as $assignees){
+        //         $user = User::where('id',$assignees->toassignuser_id)->get();
+        //         foreach($user as $users){
 
-                    if($users->id == $assignees->toassignuser_id){
-                            $users->notify(new TicketAssignNotification($calID));
-                            if($users->usetting->emailnotifyon == 1){
-                                Mail::to($users->email)
-                                    ->send( new mailmailablesend('when_ticket_assign_to_other_employee', $ticketData) );
-                            }
-                    }
-                }
+        //             if($users->id == $assignees->toassignuser_id){
+        //                     $users->notify(new TicketAssignNotification($calID));
+        //                     if($users->usetting->emailnotifyon == 1){
+        //                         Mail::to($users->email)
+        //                             ->send( new mailmailablesend('when_ticket_assign_to_other_employee', $ticketData) );
+        //                     }
+        //             }
+        //         }
+        //     }
+
+        // }catch(\Exception $e){
+        //     return response()->json(['code'=>200, 'success'=> lang('The ticket was successfully assigned.', 'alerts')], 200);
+        // }
+
+        try {
+    $assignee = $calID->ticketassignmutliples;
+    foreach ($assignee as $assignees) {
+        $user = User::find($assignees->toassignuser_id);
+        if ($user) {
+            // ✅ Pass assigned user ID to notification
+            $user->notify(new TicketAssignNotification($calID, $user->id));
+
+            // Optional: send mail
+            if ($user->usetting->emailnotifyon == 1) {
+                Mail::to($user->email)->send(new mailmailablesend('when_ticket_assign_to_other_employee', $ticketData));
             }
 
-        }catch(\Exception $e){
-            return response()->json(['code'=>200, 'success'=> lang('The ticket was successfully assigned.', 'alerts')], 200);
+            // Optional: If you have `user_id` column in `notifications`, update it manually
+            $notification = $user->notifications()->latest()->first();
+            if ($notification && Schema::hasColumn('notifications', 'user_id')) {
+                $notification->update(['user_id' => $user->id]);
+            }
         }
+    }
+} catch (\Exception $e) {
+    return response()->json([
+        'code' => 200,
+        'success' => lang('The ticket was successfully assigned.', 'alerts')
+    ], 200);
+}
+
 
         return response()->json(['code'=>200, 'success'=> lang('The ticket was successfully assigned.', 'alerts')], 200);
 

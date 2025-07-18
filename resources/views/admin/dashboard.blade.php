@@ -10,6 +10,10 @@
     <link href="{{ asset('assets/plugins/sweet-alert/sweetalert.css') }}" rel="stylesheet" />
 
     <style>
+        .table-responsive.delete-button {
+            min-height: 150px;
+        }
+
         .uhelp-reply-badge {
             right: 14px;
             bottom: 10px;
@@ -68,7 +72,7 @@
     @if ($mailnotify->isNotEmpty())
         <div class="alert alert-warning-light br-13 mt-6 align-items-center border-0 d-flex" role="alert">
             <div class="d-flex">
-                <svg class="alt-notify me-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <svg class="alt-notify  me-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                     <path fill="#eec466"
                         d="M19,20H5a3.00328,3.00328,0,0,1-3-3V7A3.00328,3.00328,0,0,1,5,4H19a3.00328,3.00328,0,0,1,3,3V17A3.00328,3.00328,0,0,1,19,20Z" />
                     <path fill="#e49e00"
@@ -111,9 +115,9 @@
                             <div class="input-group-text">
                                 <i class="feather feather-calendar"></i>
                             </div>
-                            <!-- <input class="form-control fc-datepicker pb-0 pt-0" value="{{ now(Auth::user()->timezone)->format(setting('date_format')) }}" type="text" disabled> -->
                             <span
                                 class="form-control fc-datepicker pb-0 pt-1">{{ now(Auth::user()->timezone)->format(setting('date_format')) }}</span>
+                            <!-- <input class="form-control fc-datepicker pb-0 pt-0" value="{{ \Carbon\Carbon::now(Auth::user()->timezone)->format(setting('date_format')) }}" type="text" disabled> -->
                         </div>
                     </div>
                     <div class="header-datepicker picker2 me-3">
@@ -126,7 +130,6 @@
                                 {{ \Carbon\Carbon::now(Auth::user()->timezone)->format(setting('time_format')) }}
 
                             </span>
-
                         </div>
                     </div><!-- wd-150 -->
                 </div>
@@ -136,536 +139,852 @@
     <!--End Page header-->
 
     <!--Dashboard List-->
-    <h6 class="fw-semibold mb-3">
-        {{ lang('Global Tickets', 'menu') }}
-    </h6>
-    <div class="row row-cols-xxl-5">
-        <div class="col-xxl-2 col-xl-6 col-lg-6 col-sm-6">
-            <div class="card">
-                <div class="card-body p-4">
-                    <a href="{{ url('/admin/alltickets') }}">
-                        <div class="d-flex">
-                            <div class="icon2 bg-primary-transparent my-auto me-3">
-                                <i class="las la-ticket-alt"></i>
-                            </div>
-                            <div>
-                                <p class="fs-14 font-weight-semibold mb-1">{{ lang('All Tickets') }} </p>
-                                <h5 class="mb-0">{{ $totaltickets }}</h5>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </div>
-        <div class="col-xxl-2 col-xl-6 col-lg-6 col-sm-6">
-            <div class="card">
-                <div class="card-body p-4">
-                    <a href="{{ route('admin.recenttickets') }}">
-                        <div class="d-flex">
-                            <div class="icon2 bg-secondary-transparent my-auto me-3">
-                                <i class="las la-ticket-alt"></i>
-                            </div>
-                            <div>
-                                <p class="fs-14 font-weight-semibold mb-1">{{ lang('Recent Tickets') }} </p>
-                                <h5 class="mb-0">{{ $recentticketcount }}</h5>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </div>
-        <div class="col-xxl-2 col-xl-6 col-lg-6 col-sm-6">
-            <div class="card">
-                <div class="card-body p-4">
-                    <a href="{{ url('/admin/activeticket') }}">
-                        <div class="d-flex">
-                            <div class="icon2 bg-success-transparent my-auto me-3">
-                                <i class="las la-ticket-alt"></i>
-                            </div>
-                            <div>
-                                <p class="fs-14 font-weight-semibold mb-1">{{ lang('Active Tickets') }} </p>
-                                <h5 class="mb-0">{{ $totalactivetickets }}</h5>
-                                @if ($replyrecent > 0)
-                                    <span class="position-absolute uhelp-reply-badge pulse-badge" data-bs-toggle="tooltip"
-                                        data-bs-placement="top" data-bs-title="Un-Answered"><i
-                                            class="fa fa-commenting me-1"></i>{{ $replyrecent }}</span>
-                                @else
-                                    <span class="position-absolute uhelp-reply-badge pulse-badge disabled"
-                                        data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Un-Answered"><i
-                                            class="fa fa-commenting me-1"></i>0</span>
-                                @endif
 
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </div>
-        <div class="col-xxl-2 col-xl-6 col-lg-6 col-sm-6">
-            <div class="card">
-                <div class="card-body p-4">
-                    <a href="{{ route('admin.suspendedtickets') }}">
-                        <div class="d-flex">
-                            <div class="icon2 bg-warning-transparent my-auto me-3">
-                                <i class="las la-ticket-alt"></i>
-                            </div>
-                            <div>
-                                <p class="fs-14 font-weight-semibold mb-1">{{ lang('Suspended Tickets') }}</p>
-                                <h5 class="mb-0">{{ $suspendedticketcount }}</h5>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </div>
-        <div class="col-xxl-2 col-xl-6 col-lg-6 col-sm-6">
-            <div class="card">
-                <div class="card-body p-4">
-                    <a href="{{ url('/admin/closedticket') }}">
-                        <div class="d-flex">
-                            <div class="icon2 bg-danger-transparent my-auto me-3">
-                                <i class="las la-ticket-alt"></i>
-                            </div>
-                            <div>
-                                <p class="fs-14 font-weight-semibold mb-1">{{ lang('Closed Tickets') }} </p>
-                                <h5 class="mb-0">{{ $totalclosedtickets }}</h5>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <h6 class="fw-semibold mb-3">
-        {{ lang('Self Tickets') }}
-    </h6>
     <div class="row">
-        <div class="col-xl-3 col-lg-6 col-sm-6">
-            <div class="card">
-                <div class="card-body p-4">
-                    <a href="{{ route('admin.selfassignticketview') }}">
-                        <div class="d-flex align-items-center">
-                            <div class="me-3">
-                                <svg class="ticket-new primary svg-primary" xmlns="http://www.w3.org/2000/svg"
-                                    enable-background="new 0 0 60 60" viewBox="0 0 60 60">
-                                    <path
-                                        d="M54,15H6c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1c1.6542969,0,3,1.3457031,3,3s-1.3457031,3-3,3
-                    c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1h48c0.5522461,0,1-0.4477539,1-1V34c0-0.5522461-0.4477539-1-1-1
-                    c-1.6542969,0-3-1.3457031-3-3s1.3457031-3,3-3c0.5522461,0,1-0.4477539,1-1V16C55,15.4477539,54.5522461,15,54,15z M53,25.1005859
-                    C50.7207031,25.5649414,49,27.5854492,49,30s1.7207031,4.4350586,4,4.8994141V43h-9.0371094h-2H7v-8.1005859
-                    C9.2792969,34.4350586,11,32.4145508,11,30s-1.7207031-4.4350586-4-4.8994141V17h34.9628906h2H53V25.1005859z">
-                                    </path>
-                                    <rect width="2" height="2" x="41.963" y="27"></rect>
-                                    <rect width="2" height="2" x="41.963" y="31"></rect>
-                                    <rect width="2" height="2" x="41.963" y="19"></rect>
-                                    <rect width="2" height="2" x="41.963" y="35"></rect>
-                                    <rect width="2" height="2" x="41.963" y="23"></rect>
-                                    <rect width="2" height="2" x="41.963" y="39"></rect>
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="fs-14 font-weight-semibold mb-1">
-                                    {{ lang('Self assigned Tickets') }}</p>
-                                <h5 class="mb-0">{{ $selfassigncount }}</h5>
+        <div class="col-xl-4">
+            <h6 class="mb-3 fw-semibold">{{ lang('General Tickets') }}</h6>
+            <div class="row">
+                <div class="col-xl-6 col-lg-6 col-sm-6">
+                    {{-- <div class="card">
+                        <div class="card-body">
+                            <a href="{{ route('admin.recenttickets') }}">
+                                <div class="d-flex">
+                                    <span class="me-3 my-auto">
+                                        <svg class="tickets-recent primary" xmlns="http://www.w3.org/2000/svg"
+                                            enable-background="new 0 0 60 60" viewBox="0 0 60 60">
+                                            <path
+                                                d="M54,15H6c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1c1.6542969,0,3,1.3457031,3,3s-1.3457031,3-3,3
+                                                                            c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1h48c0.5522461,0,1-0.4477539,1-1V34c0-0.5522461-0.4477539-1-1-1
+                                                                            c-1.6542969,0-3-1.3457031-3-3s1.3457031-3,3-3c0.5522461,0,1-0.4477539,1-1V16C55,15.4477539,54.5522461,15,54,15z M53,25.1005859
+                                                                            C50.7207031,25.5649414,49,27.5854492,49,30s1.7207031,4.4350586,4,4.8994141V43h-9.0371094h-2H7v-8.1005859
+                                                                            C9.2792969,34.4350586,11,32.4145508,11,30s-1.7207031-4.4350586-4-4.8994141V17h34.9628906h2H53V25.1005859z">
+                                            </path>
+                                            <rect width="2" height="2" x="41.963" y="27"></rect>
+                                            <rect width="2" height="2" x="41.963" y="31"></rect>
+                                            <rect width="2" height="2" x="41.963" y="19"></rect>
+                                            <rect width="2" height="2" x="41.963" y="35"></rect>
+                                            <rect width="2" height="2" x="41.963" y="23"></rect>
+                                            <rect width="2" height="2" x="41.963" y="39"></rect>
+                                        </svg>
+                                    </span>
+                                    <div class="">
+                                        <div class="d-block w-100">
+                                        <p class="fs-14 font-weight-semibold mb-0">{{ lang('Recents Tickets') }}
+                                            </div>
+                                        </p>
+                                        <h3 class="mb-0 text-primary">{{ $recentticketcount }}</h3>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div> --}}
+
+                    <div class="card">
+                        <div class="card-body">
+                            <!-- Card Title -->
+                            <p class="fs-0 h5 d-block fw-semibold mb-2">{{ lang('Recents Tickets') }}</p>
+
+                            <!-- Icon and Count in one line -->
+                            <a href="{{ route('admin.recenttickets') }}" class="text-decoration-none text-dark">
+                                <div class="d-flex align-items-center">
+                                    <!-- SVG Icon -->
+                                    <span class="me-3">
+                                        <svg class="tickets-recent primary" xmlns="http://www.w3.org/2000/svg"
+                                            enable-background="new 0 0 60 60" viewBox="0 0 60 60" width="40"
+                                            height="40">
+                                            <path
+                                                d="M54,15H6c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1c1.6542969,0,3,1.3457031,3,3s-1.3457031,3-3,3
+                                                            c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1h48c0.5522461,0,1-0.4477539,1-1V34c0-0.5522461-0.4477539-1-1-1
+                                                            c-1.6542969,0-3-1.3457031-3-3s1.3457031-3,3-3c0.5522461,0,1-0.4477539,1-1V16C55,15.4477539,54.5522461,15,54,15z M53,25.1005859
+                                                            C50.7207031,25.5649414,49,27.5854492,49,30s1.7207031,4.4350586,4,4.8994141V43h-9.0371094h-2H7v-8.1005859
+                                                            C9.2792969,34.4350586,11,32.4145508,11,30s-1.7207031-4.4350586-4-4.8994141V17h34.9628906h2H53V25.1005859z">
+                                            </path>
+                                            <rect width="2" height="2" x="41.963" y="27"></rect>
+                                            <rect width="2" height="2" x="41.963" y="31"></rect>
+                                            <rect width="2" height="2" x="41.963" y="19"></rect>
+                                            <rect width="2" height="2" x="41.963" y="35"></rect>
+                                            <rect width="2" height="2" x="41.963" y="23"></rect>
+                                            <rect width="2" height="2" x="41.963" y="39"></rect>
+                                        </svg>
+                                    </span>
+
+                                    <!-- Ticket Count -->
+                                    <h3 class="mb-0 text-primary">{{ $recentticketcount }}</h3>
+                                </div>
+                            </a>
+                        </div>
+
+
+                    </div>
+
+                </div>
+                {{-- <div class="col-xl-6 col-lg-6 col-sm-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <a href="{{ url('/admin/activeticket') }}">
+                                <div class="d-flex">
+                                    <span class="me-3 my-auto">
+                                        <svg class="tickets-recent secondary" xmlns="http://www.w3.org/2000/svg"
+                                            enable-background="new 0 0 60 60" viewBox="0 0 60 60">
+                                            <path
+                                                d="M54,15H6c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1c1.6542969,0,3,1.3457031,3,3s-1.3457031,3-3,3
+                                                                                c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1h48c0.5522461,0,1-0.4477539,1-1V34c0-0.5522461-0.4477539-1-1-1
+                                                                                c-1.6542969,0-3-1.3457031-3-3s1.3457031-3,3-3c0.5522461,0,1-0.4477539,1-1V16C55,15.4477539,54.5522461,15,54,15z M53,25.1005859
+                                                                                C50.7207031,25.5649414,49,27.5854492,49,30s1.7207031,4.4350586,4,4.8994141V43h-9.0371094h-2H7v-8.1005859
+                                                                                C9.2792969,34.4350586,11,32.4145508,11,30s-1.7207031-4.4350586-4-4.8994141V17h34.9628906h2H53V25.1005859z">
+                                            </path>
+                                            <rect width="2" height="2" x="41.963" y="27"></rect>
+                                            <rect width="2" height="2" x="41.963" y="31"></rect>
+                                            <rect width="2" height="2" x="41.963" y="19"></rect>
+                                            <rect width="2" height="2" x="41.963" y="35"></rect>
+                                            <rect width="2" height="2" x="41.963" y="23"></rect>
+                                            <rect width="2" height="2" x="41.963" y="39"></rect>
+                                        </svg>
+                                    </span>
+                                    {{-- Hide unassign Tickets --}}
+                {{-- <div>
+                                        <p class="fs-14 d-block font-weight-semibold mb-0">{{ lang('Unassigned Tickets') }}</p> <br>
+
+                                        <h3 class="mb-0 text-secondary">{{ $totalactivetickets }}</h3>
+                                        @if ($totalactiverecent > 0)
+                                            <span class="position-absolute uhelp-reply-badge pulse-badge"
+                                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                                data-bs-title="Un-Answered"><i
+                                                    class="fa fa-commenting me-1"></i>{{ $totalactiverecent }}</span>
+                                        @else
+                                            <span class="position-absolute uhelp-reply-badge pulse-badge disabled"
+                                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                                data-bs-title="Un-Answered"><i class="fa fa-commenting me-1"></i>0</span>
+                                        @endif
+                                    </div> --}}
+                {{-- </div>
+                            </a>
+                        </div>
+                    </div>
+                </div> --}}
+                @if (auth()->user()->role === 'admin')
+                    <div class="col-xl-6 col-lg-6 col-sm-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <a href="{{ url('/admin/activeticket') }}">
+                                    <div class="d-flex">
+                                        <span class="me-3 my-auto">
+                                            <svg class="tickets-recent secondary" xmlns="http://www.w3.org/2000/svg"
+                                                enable-background="new 0 0 60 60" viewBox="0 0 60 60">
+                                                <!-- SVG path here -->
+                                            </svg>
+                                        </span>
+                                        <div>
+                                            <p class="fs-14 fw-semibold mb-1">{{ lang('Active Tickets') }}</p>
+                                            <h3 class="mb-0 text-secondary">{{ $totalactivetickets }}</h3>
+                                            @if ($totalactiverecent > 0)
+                                                <span class="position-absolute uhelp-reply-badge pulse-badge"
+                                                    data-bs-toggle="tooltip" data-bs-placement="top" title="Un-Answered"><i
+                                                        class="fa fa-commenting me-1"></i>{{ $totalactiverecent }}</span>
+                                            @else
+                                                <span class="position-absolute uhelp-reply-badge pulse-badge disabled"
+                                                    data-bs-toggle="tooltip" data-bs-placement="top" title="Un-Answered"><i
+                                                        class="fa fa-commenting me-1"></i>0</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </a>
                             </div>
                         </div>
-                    </a>
-                </div>
+                    </div>
+                @endif
+
+
             </div>
         </div>
-        <div class="col-xl-3 col-lg-6 col-sm-6">
-            <div class="card">
-                <div class="card-body p-4">
-                    <a href="{{ url('/admin/myassignedtickets') }}">
-                        <div class="d-flex align-items-center">
-                            <div class="me-3">
-                                <svg class="ticket-new bg-success-transparent svg-success"
-                                    xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 60 60"
-                                    viewBox="0 0 60 60">
-                                    <path
-                                        d="M54,15H6c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1c1.6542969,0,3,1.3457031,3,3s-1.3457031,3-3,3
-                    c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1h48c0.5522461,0,1-0.4477539,1-1V34c0-0.5522461-0.4477539-1-1-1
-                    c-1.6542969,0-3-1.3457031-3-3s1.3457031-3,3-3c0.5522461,0,1-0.4477539,1-1V16C55,15.4477539,54.5522461,15,54,15z M53,25.1005859
-                    C50.7207031,25.5649414,49,27.5854492,49,30s1.7207031,4.4350586,4,4.8994141V43h-9.0371094h-2H7v-8.1005859
-                    C9.2792969,34.4350586,11,32.4145508,11,30s-1.7207031-4.4350586-4-4.8994141V17h34.9628906h2H53V25.1005859z">
-                                    </path>
-                                    <rect width="2" height="2" x="41.963" y="27"></rect>
-                                    <rect width="2" height="2" x="41.963" y="31"></rect>
-                                    <rect width="2" height="2" x="41.963" y="19"></rect>
-                                    <rect width="2" height="2" x="41.963" y="35"></rect>
-                                    <rect width="2" height="2" x="41.963" y="23"></rect>
-                                    <rect width="2" height="2" x="41.963" y="39"></rect>
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="fs-14 font-weight-semibold mb-1">
-                                    {{ lang('My Assigned Tickets') }}</p>
-                                <h5 class="mb-0">{{ $myassignedticketcount }}</h5>
-                            </div>
+        <div class="col-xl-8">
+            <p class="fw-esmibold mb-3 h5">{{ lang('Self Tickets') }}</p>
+
+            <div class="row">
+                <div class="col-xl-3 col-lg-6 col-sm-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <!-- Title: Keep it single line -->
+                            <p class="fs-6 h6 fw-semibold mb-3 text-truncate" style="max-width: 100%;">
+                                {{ lang('Self assigned Tickets') }}
+                            </p>
+
+                            <!-- Main content: icon, count, and reply icon in one row -->
+                            <a href="{{ route('admin.selfassignticketview') }}" class="text-decoration-none text-dark">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <!-- Icon and Count -->
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-3">
+                                            <svg class="ticket-new primary svg-primary" xmlns="http://www.w3.org/2000/svg"
+                                                enable-background="new 0 0 60 60" viewBox="0 0 60 60">
+                                                <path
+                                                    d="M54,15H6c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1c1.6542969,0,3,1.3457031,3,3s-1.3457031,3-3,3
+                                                  c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1h48c0.5522461,0,1-0.4477539,1-1V34c0-0.5522461-0.4477539-1-1-1
+                                                  c-1.6542969,0-3-1.3457031-3-3s1.3457031-3,3-3c0.5522461,0,1-0.4477539,1-1V16C55,15.4477539,54.5522461,15,54,15z M53,25.1005859
+                                                  C50.7207031,25.5649414,49,27.5854492,49,30s1.7207031,4.4350586,4,4.8994141V43h-9.0371094h-2H7v-8.1005859
+                                                  C9.2792969,34.4350586,11,32.4145508,11,30s-1.7207031-4.4350586-4-4.8994141V17h34.9628906h2H53V25.1005859z">
+                                                </path>
+                                                <rect width="2" height="2" x="41.963" y="27"></rect>
+                                                <rect width="2" height="2" x="41.963" y="31"></rect>
+                                                <rect width="2" height="2" x="41.963" y="19"></rect>
+                                                <rect width="2" height="2" x="41.963" y="35"></rect>
+                                                <rect width="2" height="2" x="41.963" y="23"></rect>
+                                                <rect width="2" height="2" x="41.963" y="39"></rect>
+                                            </svg>
+
+                                        </span>
+                                        <h3 class="mb-0 text-primary">{{ $selfassigncount }}</h3>
+                                    </div>
+
+                                    <!-- Badge at end -->
+                                    @if ($selfassignrecentreply > 0)
+                                        <span class="uhelp-reply-badge pulse-badge" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" title="Un-Answered">
+                                            <i class="fa fa-commenting me-1"></i>{{ $selfassignrecentreply }}
+                                        </span>
+                                    @else
+                                        <span class="uhelp-reply-badge pulse-badge disabled" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" title="Un-Answered">
+                                            <i class="fa fa-commenting me-1"></i>0
+                                        </span>
+                                    @endif
+                                </div>
+                            </a>
                         </div>
-                    </a>
+                    </div>
                 </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-lg-6 col-sm-6">
-            <div class="card">
-                <div class="card-body p-4">
-                    <a href="{{ route('admin.myclosedtickets') }}">
-                        <div class="d-flex align-items-center">
-                            <div class="me-3">
-                                <svg class="ticket-new bg-danger-transparent svg-danger"
-                                    xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 60 60"
-                                    viewBox="0 0 60 60">
-                                    <path
-                                        d="M54,15H6c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1c1.6542969,0,3,1.3457031,3,3s-1.3457031,3-3,3
-                    c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1h48c0.5522461,0,1-0.4477539,1-1V34c0-0.5522461-0.4477539-1-1-1
-                    c-1.6542969,0-3-1.3457031-3-3s1.3457031-3,3-3c0.5522461,0,1-0.4477539,1-1V16C55,15.4477539,54.5522461,15,54,15z M53,25.1005859
-                    C50.7207031,25.5649414,49,27.5854492,49,30s1.7207031,4.4350586,4,4.8994141V43h-9.0371094h-2H7v-8.1005859
-                    C9.2792969,34.4350586,11,32.4145508,11,30s-1.7207031-4.4350586-4-4.8994141V17h34.9628906h2H53V25.1005859z">
-                                    </path>
-                                    <rect width="2" height="2" x="41.963" y="27"></rect>
-                                    <rect width="2" height="2" x="41.963" y="31"></rect>
-                                    <rect width="2" height="2" x="41.963" y="19"></rect>
-                                    <rect width="2" height="2" x="41.963" y="35"></rect>
-                                    <rect width="2" height="2" x="41.963" y="23"></rect>
-                                    <rect width="2" height="2" x="41.963" y="39"></rect>
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="fs-14 font-weight-semibold mb-1">
-                                    {{ lang('Closed Tickets') }}</p>
-                                <h5 class="mb-0">{{ $myclosedticketcount }}</h5>
-                            </div>
+
+
+
+                {{-- <div class="col-xl-3 col-lg-6 col-sm-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <a href="{{ url('/admin/myassignedtickets') }}">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <svg class="ticket-new success svg-success" xmlns="http://www.w3.org/2000/svg"
+                                            enable-background="new 0 0 60 60" viewBox="0 0 60 60">
+                                            <path
+                                                d="M54,15H6c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1c1.6542969,0,3,1.3457031,3,3s-1.3457031,3-3,3
+                                          c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1h48c0.5522461,0,1-0.4477539,1-1V34c0-0.5522461-0.4477539-1-1-1
+                                          c-1.6542969,0-3-1.3457031-3-3s1.3457031-3,3-3c0.5522461,0,1-0.4477539,1-1V16C55,15.4477539,54.5522461,15,54,15z M53,25.1005859
+                                          C50.7207031,25.5649414,49,27.5854492,49,30s1.7207031,4.4350586,4,4.8994141V43h-9.0371094h-2H7v-8.1005859
+                                          C9.2792969,34.4350586,11,32.4145508,11,30s-1.7207031-4.4350586-4-4.8994141V17h34.9628906h2H53V25.1005859z">
+                                            </path>
+                                            <rect width="2" height="2" x="41.963" y="27"></rect>
+                                            <rect width="2" height="2" x="41.963" y="31"></rect>
+                                            <rect width="2" height="2" x="41.963" y="19"></rect>
+                                            <rect width="2" height="2" x="41.963" y="35"></rect>
+                                            <rect width="2" height="2" x="41.963" y="23"></rect>
+                                            <rect width="2" height="2" x="41.963" y="39"></rect>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="fs-14 font-weight-semibold mb-1">
+                                            {{ lang('My Assigned Tickets') }}</p>
+                                        <h5 class="mb-0">{{ $myassignedticketcount }}</h5>
+                                        @if ($myassignedticketrecentreply > 0)
+                                            <span class="position-absolute uhelp-reply-badge pulse-badge"
+                                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                                data-bs-title="Un-Answered"><i
+                                                    class="fa fa-commenting me-1"></i>{{ $myassignedticketrecentreply }}</span>
+                                        @else
+                                            <span class="position-absolute uhelp-reply-badge pulse-badge disabled"
+                                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                                data-bs-title="Un-Answered"><i class="fa fa-commenting me-1"></i>0</span>
+                                        @endif
+
+                                    </div>
+                                </div>
+                            </a>
                         </div>
-                    </a>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-lg-6 col-sm-6">
-            <div class="card">
-                <div class="card-body p-4">
-                    <a href="{{ route('admin.mysuspendtickets') }}">
-                        <div class="d-flex align-items-center">
-                            <div class="me-3">
-                                <svg class="ticket-new bg-warning-transparent svg-warning"
-                                    xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 60 60"
-                                    viewBox="0 0 60 60">
-                                    <path
-                                        d="M54,15H6c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1c1.6542969,0,3,1.3457031,3,3s-1.3457031,3-3,3
-                    c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1h48c0.5522461,0,1-0.4477539,1-1V34c0-0.5522461-0.4477539-1-1-1
-                    c-1.6542969,0-3-1.3457031-3-3s1.3457031-3,3-3c0.5522461,0,1-0.4477539,1-1V16C55,15.4477539,54.5522461,15,54,15z M53,25.1005859
-                    C50.7207031,25.5649414,49,27.5854492,49,30s1.7207031,4.4350586,4,4.8994141V43h-9.0371094h-2H7v-8.1005859
-                    C9.2792969,34.4350586,11,32.4145508,11,30s-1.7207031-4.4350586-4-4.8994141V17h34.9628906h2H53V25.1005859z">
-                                    </path>
-                                    <rect width="2" height="2" x="41.963" y="27"></rect>
-                                    <rect width="2" height="2" x="41.963" y="31"></rect>
-                                    <rect width="2" height="2" x="41.963" y="19"></rect>
-                                    <rect width="2" height="2" x="41.963" y="35"></rect>
-                                    <rect width="2" height="2" x="41.963" y="23"></rect>
-                                    <rect width="2" height="2" x="41.963" y="39"></rect>
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="fs-14 font-weight-semibold mb-1">
-                                    {{ lang('Suspend Tickets') }}</p>
-                                <h5 class="mb-0">{{ $suspendticketcount }}</h5>
-                            </div>
+                    </div>
+                </div> --}}
+                <div class="col-xl-3 col-lg-6 col-sm-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <!-- Title: Single-line header -->
+                            <p class="fs-6 h5 fw-semibold mb-3 text-truncate" style="max-width: 100%;">
+                                {{ lang('My Assigned Tickets') }}
+                            </p>
+
+                            <!-- Icon + Count + Reply Badge Row -->
+                            <a href="{{ url('/admin/myassignedtickets') }}" class="text-decoration-none text-dark">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <!-- Icon and Count -->
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-3">
+                                            <svg class="ticket-new success svg-success" xmlns="http://www.w3.org/2000/svg"
+                                                enable-background="new 0 0 60 60" viewBox="0 0 60 60">
+                                                <path
+                                                    d="M54,15H6c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1c1.6542969,0,3,1.3457031,3,3s-1.3457031,3-3,3
+                                                  c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1h48c0.5522461,0,1-0.4477539,1-1V34c0-0.5522461-0.4477539-1-1-1
+                                                  c-1.6542969,0-3-1.3457031-3-3s1.3457031-3,3-3c0.5522461,0,1-0.4477539,1-1V16C55,15.4477539,54.5522461,15,54,15z M53,25.1005859
+                                                  C50.7207031,25.5649414,49,27.5854492,49,30s1.7207031,4.4350586,4,4.8994141V43h-9.0371094h-2H7v-8.1005859
+                                                  C9.2792969,34.4350586,11,32.4145508,11,30s-1.7207031-4.4350586-4-4.8994141V17h34.9628906h2H53V25.1005859z">
+                                                </path>
+                                                <rect width="2" height="2" x="41.963" y="27"></rect>
+                                                <rect width="2" height="2" x="41.963" y="31"></rect>
+                                                <rect width="2" height="2" x="41.963" y="19"></rect>
+                                                <rect width="2" height="2" x="41.963" y="35"></rect>
+                                                <rect width="2" height="2" x="41.963" y="23"></rect>
+                                                <rect width="2" height="2" x="41.963" y="39"></rect>
+                                            </svg>
+
+                                        </span>
+                                        <h3 class="mb-0 text-success">{{ $myassignedticketcount }}</h3>
+                                    </div>
+
+                                    <!-- Reply Badge -->
+                                    @if ($myassignedticketrecentreply > 0)
+                                        <span class="uhelp-reply-badge pulse-badge" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" title="Un-Answered">
+                                            <i class="fa fa-commenting me-1"></i>{{ $myassignedticketrecentreply }}
+                                        </span>
+                                    @else
+                                        <span class="uhelp-reply-badge pulse-badge disabled" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" title="Un-Answered">
+                                            <i class="fa fa-commenting me-1"></i>0
+                                        </span>
+                                    @endif
+                                </div>
+                            </a>
                         </div>
-                    </a>
+                    </div>
                 </div>
+
+                {{-- <div class="col-xl-3 col-lg-6 col-sm-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <a href="{{ route('admin.myclosedtickets') }}">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <svg class="ticket-new bg-danger-transparent svg-danger"
+                                            xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 60 60"
+                                            viewBox="0 0 60 60">
+                                            <path
+                                                d="M54,15H6c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1c1.6542969,0,3,1.3457031,3,3s-1.3457031,3-3,3
+                                              c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1h48c0.5522461,0,1-0.4477539,1-1V34c0-0.5522461-0.4477539-1-1-1
+                                              c-1.6542969,0-3-1.3457031-3-3s1.3457031-3,3-3c0.5522461,0,1-0.4477539,1-1V16C55,15.4477539,54.5522461,15,54,15z M53,25.1005859
+                                              C50.7207031,25.5649414,49,27.5854492,49,30s1.7207031,4.4350586,4,4.8994141V43h-9.0371094h-2H7v-8.1005859
+                                              C9.2792969,34.4350586,11,32.4145508,11,30s-1.7207031-4.4350586-4-4.8994141V17h34.9628906h2H53V25.1005859z">
+                                            </path>
+                                            <rect width="2" height="2" x="41.963" y="27"></rect>
+                                            <rect width="2" height="2" x="41.963" y="31"></rect>
+                                            <rect width="2" height="2" x="41.963" y="19"></rect>
+                                            <rect width="2" height="2" x="41.963" y="35"></rect>
+                                            <rect width="2" height="2" x="41.963" y="23"></rect>
+                                            <rect width="2" height="2" x="41.963" y="39"></rect>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="fs-14 font-weight-semibold mb-1">
+                                            {{ lang('Closed Tickets') }}</p>
+                                        <h5 class="mb-0">{{ $myclosedticketcount }}</h5>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                {{-- </div> --}}
+                {{-- My close Ticket --}}
+                <div class="col-xl-3 col-lg-6 col-sm-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <!-- Title (single-line) -->
+                            <p class="fs-6 h5 fw-semibold mb-3 text-truncate" style="max-width: 100%;">
+                                {{ lang('Closed Tickets') }}
+                            </p>
+
+                            <!-- Icon + Count Row -->
+                            <a href="{{ route('admin.myclosedtickets') }}" class="text-decoration-none text-dark">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <!-- Icon + Count -->
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-3">
+                                            <svg class="ticket-new bg-danger-transparent svg-danger"
+                                                xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 60 60"
+                                                viewBox="0 0 60 60">
+                                                <path
+                                                    d="M54,15H6c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1c1.6542969,0,3,1.3457031,3,3s-1.3457031,3-3,3
+                                                  c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1h48c0.5522461,0,1-0.4477539,1-1V34c0-0.5522461-0.4477539-1-1-1
+                                                  c-1.6542969,0-3-1.3457031-3-3s1.3457031-3,3-3c0.5522461,0,1-0.4477539,1-1V16C55,15.4477539,54.5522461,15,54,15z M53,25.1005859
+                                                  C50.7207031,25.5649414,49,27.5854492,49,30s1.7207031,4.4350586,4,4.8994141V43h-9.0371094h-2H7v-8.1005859
+                                                  C9.2792969,34.4350586,11,32.4145508,11,30s-1.7207031-4.4350586-4-4.8994141V17h34.9628906h2H53V25.1005859z">
+                                                </path>
+                                                <rect width="2" height="2" x="41.963" y="27"></rect>
+                                                <rect width="2" height="2" x="41.963" y="31"></rect>
+                                                <rect width="2" height="2" x="41.963" y="19"></rect>
+                                                <rect width="2" height="2" x="41.963" y="35"></rect>
+                                                <rect width="2" height="2" x="41.963" y="23"></rect>
+                                                <rect width="2" height="2" x="41.963" y="39"></rect>
+                                            </svg>
+
+                                        </span>
+                                        <h3 class="mb-0 text-danger">{{ $myclosedticketcount }}</h3>
+                                    </div>
+
+                                    <!-- Optional: Add a badge if needed -->
+                                    {{--
+                    <span class="uhelp-reply-badge pulse-badge"
+                        data-bs-toggle="tooltip" data-bs-placement="top"
+                        title="Something optional">
+                        <i class="fa fa-commenting me-1"></i>0
+                    </span>
+                    --}}
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+
+                {{-- <div class="col-xl-3 col-lg-6 col-sm-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <a href="{{ route('admin.mysuspendtickets') }}">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <svg class="ticket-new bg-warning-transparent svg-warning"
+                                            xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 60 60"
+                                            viewBox="0 0 60 60">
+                                            <path
+                                                d="M54,15H6c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1c1.6542969,0,3,1.3457031,3,3s-1.3457031,3-3,3
+                                                  c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1h48c0.5522461,0,1-0.4477539,1-1V34c0-0.5522461-0.4477539-1-1-1
+                                                  c-1.6542969,0-3-1.3457031-3-3s1.3457031-3,3-3c0.5522461,0,1-0.4477539,1-1V16C55,15.4477539,54.5522461,15,54,15z M53,25.1005859
+                                                  C50.7207031,25.5649414,49,27.5854492,49,30s1.7207031,4.4350586,4,4.8994141V43h-9.0371094h-2H7v-8.1005859
+                                                  C9.2792969,34.4350586,11,32.4145508,11,30s-1.7207031-4.4350586-4-4.8994141V17h34.9628906h2H53V25.1005859z">
+                                            </path>
+                                            <rect width="2" height="2" x="41.963" y="27"></rect>
+                                            <rect width="2" height="2" x="41.963" y="31"></rect>
+                                            <rect width="2" height="2" x="41.963" y="19"></rect>
+                                            <rect width="2" height="2" x="41.963" y="35"></rect>
+                                            <rect width="2" height="2" x="41.963" y="23"></rect>
+                                            <rect width="2" height="2" x="41.963" y="39"></rect>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="fs-14 font-weight-semibold mb-1">
+                                            {{ lang('Suspend Tickets') }}</p>
+                                        <h5 class="mb-0">{{ $suspendticketcount }}</h5>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div> --}}
+                {{-- suspend ticket to on-hold tickets --}}
+                <div class="col-xl-3 col-lg-6 col-sm-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <!-- Title: Single-line -->
+                            <p class="fs-6 h5 fw-semibold mb-3 text-truncate" style="max-width: 100%;">
+                                {{ lang('On-Hold Tickets') }}
+                            </p>
+
+                            <!-- Icon + Count Row -->
+                            <a href="{{ route('admin.mysuspendtickets') }}" class="text-decoration-none text-dark">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <!-- Icon and Count -->
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-3">
+                                             <svg class="ticket-new bg-warning-transparent svg-warning"
+                                            xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 60 60"
+                                            viewBox="0 0 60 60">
+                                            <path
+                                                d="M54,15H6c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1c1.6542969,0,3,1.3457031,3,3s-1.3457031,3-3,3
+                                                  c-0.5522461,0-1,0.4477539-1,1v10c0,0.5522461,0.4477539,1,1,1h48c0.5522461,0,1-0.4477539,1-1V34c0-0.5522461-0.4477539-1-1-1
+                                                  c-1.6542969,0-3-1.3457031-3-3s1.3457031-3,3-3c0.5522461,0,1-0.4477539,1-1V16C55,15.4477539,54.5522461,15,54,15z M53,25.1005859
+                                                  C50.7207031,25.5649414,49,27.5854492,49,30s1.7207031,4.4350586,4,4.8994141V43h-9.0371094h-2H7v-8.1005859
+                                                  C9.2792969,34.4350586,11,32.4145508,11,30s-1.7207031-4.4350586-4-4.8994141V17h34.9628906h2H53V25.1005859z">
+                                            </path>
+                                            <rect width="2" height="2" x="41.963" y="27"></rect>
+                                            <rect width="2" height="2" x="41.963" y="31"></rect>
+                                            <rect width="2" height="2" x="41.963" y="19"></rect>
+                                            <rect width="2" height="2" x="41.963" y="35"></rect>
+                                            <rect width="2" height="2" x="41.963" y="23"></rect>
+                                            <rect width="2" height="2" x="41.963" y="39"></rect>
+                                        </svg>
+
+                                        </span>
+                                        <h3 class="mb-0 text-warning">{{ $suspendticketcount }}</h3>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+
             </div>
         </div>
     </div>
+
     <!--Dashboard List-->
 
 
-    <!-- Row -->
-    <div class="row">
+    <div class="row row-sm">
         <div class="col-lg-12">
             <div class="card">
-                <div class="card-header border-bottom-0">
-                    <h4 class="card-title">{{ lang('All Tickets') }}</h4>
+                <div class="card-header border-0">
+                    <h4 class="card-title">{{ lang('Recent Tickets') }}</h4>
                 </div>
                 <div class="card-body overflow-scroll">
                     <div class="">
                         <div class="data-table-btn">
-                            <!-- @can('Ticket Delete')
-        <button id="massdelete" class="btn btn-outline-light btn-sm mb-4 "><i class="fe fe-trash"></i><span>{{ lang('Delete') }}</span></button>
-    @endcan -->
+                            @can('Ticket Delete')
+                                <button id="massdelete" class="btn btn-outline-light btn-sm mb-4 "><i
+                                        class="fe fe-trash"></i><span>{{ lang('Delete') }}</span></button>
+                            @endcan
 
-                            {{-- <button id="refreshdata" class="btn btn-outline-light btn-sm mb-4 "><i class="fe fe-refresh-cw"></i> </button> --}}
+                            <button id="refreshdata" class="btn btn-outline-light btn-sm mb-4 "><i
+                                    class="fe fe-refresh-cw"></i> </button>
                         </div>
-                        <!-- <div class="sprukoloader-img"><i class="fa fa-spinner fa-spin"></i><span>{{ lang('Loading....') }}</span></div> -->
-                        <div class="container mt-5">
-                            <!-- Filter Controls -->
-                            <!-- Toggle Column Buttons -->
-                          <!-- Export/Row Count/Refresh Controls -->
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <label for="rowCount" class="me-2">Show Rows:</label>
-        <select id="rowCount" class="form-select form-select-sm d-inline-block w-auto">
-            <option value="10">10</option>
-            <option value="25" selected>25</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-        </select>
-    </div>
-    <div>
-        <button id="refreshdata" class="btn btn-outline-secondary btn-sm">
-            🔄 Refresh
-        </button>
-    </div>
-</div>
+                        <div class="sprukoloader-img"><i
+                                class="fa fa-spinner fa-spin"></i><span>{{ lang('Loading...') }}</span></div>
+                        <div class="dashboardtabledata">
 
-<!-- DataTable -->
-<table id="itemsTable" class="table table-bordered w-100">
-    <thead>
-        <tr>
-            <th>Sl.No</th>
-            <th>Ticket Details</th>
-            <th>User</th>
-            <th>Mobile No.</th>
-            <th>Status</th>
-            <th>Assign To</th>
-            <th>Action</th>
-        </tr>
-        <!-- Column filters row -->
-        <tr class="filters">
-            <th></th>
-            <th></th>
-            <th><input type="text" class="form-control form-control-sm" placeholder="Search User"></th>
-            <th><input type="text" class="form-control form-control-sm" placeholder="Search Mobile"></th>
-            <th><input type="text" class="form-control form-control-sm" placeholder="Search Status"></th>
-            <th></th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody></tbody>
-</table>
 
+                            <table class="table table-bordered border-bottom text-nowrap ticketdeleterow"
+                                id="supportticket-dashe">
+                                <thead>
+                                    <tr>
+                                        <th class="wpx-40 text-center"> fsfsf{{ lang('Sl.No') }}</th>
+                                        @can('Ticket Delete')
+                                            <th class="wpx-40 text-center">
+                                                <input type="checkbox" id="customCheckAll">
+                                                <label for="customCheckAll"></label>
+                                            </th>
+                                        @endcan
+                                        @cannot('Ticket Delete')
+                                            <th class="wpx-40 text-center">
+                                                <input type="checkbox" id="customCheckAll" disabled>
+                                                <label for="customCheckAll"></label>
+                                            </th>
+                                        @endcannot
+                                        <th class="ticket-dets">
+                                            {{ lang('Ticket Details') }}
+                                        </th>
+                                        <th>{{ lang('User') }}</th>
+                                        <th>
+                                            {{ lang('Assign To') }}
+                                        </th>
+                                        <th>{{ lang('Actions') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- End Row -->
+    </div>
+    <!-- End Row-->
 
 
+    <!--Dashboard List-->
+
+@endsection
+@section('scripts')
+    <!-- INTERNAL Vertical-scroll js-->
+    <script src="{{ asset('assets/plugins/vertical-scroll/jquery.bootstrap.newsbox.js') }}"></script>
+
+    <!-- INTERNAL Data tables -->
+    <script src="{{ asset('assets/plugins/datatable/js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ asset('assets/plugins/datatable/js/dataTables.bootstrap5.js') }}"></script>
+    <script src="{{ asset('assets/plugins/datatable/dataTables.responsive.min.js') }}"></script>
+    <script src="{{ asset('assets/plugins/datatable/responsive.bootstrap5.min.js') }}"></script>
+    <script src="{{ asset('assets/plugins/datatable/datatablebutton.min.js') }}"></script>
+    <script src="{{ asset('assets/plugins/datatable/buttonbootstrap.min.js') }}"></script>
 
 
+    <!-- INTERNAL Index js-->
+    <script src="{{ asset('assets/js/support/support-sidemenu.js') }}"></script>
+    <script src="{{ asset('assets/js/select2.js') }}"></script>
 
-        <!--Dashboard List-->
+    <!-- INTERNAL Sweet-Alert js-->
+    <script src="{{ asset('assets/plugins/sweet-alert/sweetalert.min.js') }}"></script>
 
-    @endsection
-    @section('scripts')
-        <!-- INTERNAL Vertical-scroll js-->
-        <script src="{{ asset('assets/plugins/vertical-scroll/jquery.bootstrap.newsbox.js') }}"></script>
+    <!-- INTERNAL Apexchart js-->
+    <script src="{{ asset('assets/plugins/apexchart/apexcharts.js') }}"></script>
 
-        <!-- INTERNAL Data tables -->
-        <script src="{{ asset('assets/plugins/datatable/js/jquery.dataTables.min.js') }}"></script>
-        <script src="{{ asset('assets/plugins/datatable/js/dataTables.bootstrap5.js') }}"></script>
-        <script src="{{ asset('assets/plugins/datatable/dataTables.responsive.min.js') }}"></script>
-        <script src="{{ asset('assets/plugins/datatable/responsive.bootstrap5.min.js') }}"></script>
-        <script src="{{ asset('assets/plugins/datatable/datatablebutton.min.js') }}"></script>
-        <script src="{{ asset('assets/plugins/datatable/buttonbootstrap.min.js') }}"></script>
-       <!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript">
+        "use strict";
 
-<!-- DataTables Core -->
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+        (function($) {
 
-<!-- DataTables Buttons -->
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+            var SITEURL = '{{ url('') }}',
+                timeurl = '{{ route('timeupdate') }}';
+            $('#tpBasic').load(timeurl);
+            setInterval(() => {
 
-<!-- JSZip and pdfmake (required for Excel & PDF export) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-
-
-
-
-
-        <!-- INTERNAL Index js-->
-        <script src="{{ asset('assets/js/support/support-sidemenu.js') }}"></script>
-        <script src="{{ asset('assets/js/select2.js') }}"></script>
-
-        <!-- INTERNAL Sweet-Alert js-->
-        <script src="{{ asset('assets/plugins/sweet-alert/sweetalert.min.js') }}"></script>
-
-        <!-- INTERNAL Apexchart js-->
-        <script src="{{ asset('assets/plugins/apexchart/apexcharts.js') }}"></script>
-
-        <script type="text/javascript">
-            "use strict";
-
-            (function($) {
-
-                var SITEURL = '{{ url('') }}',
-                    timeurl = '{{ route('timeupdate') }}';
                 $('#tpBasic').load(timeurl);
-                setInterval(() => {
 
-                    $('#tpBasic').load(timeurl);
+            }, 1000);
 
-                }, 1000);
+            @if (Auth::user()->usetting != null)
+                @if (Auth::user()->usetting->ticket_refresh == 1)
 
-                // csrf field
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    }
-                });
-                $('.sprukoloader-img').fadeIn();
-
-                // // Datatable
-                //  $('.dashboardtabledata').load('{{ route('admin.dashboardtabledata') }}', ()=>{
-                // 	$('.sprukoloader-img').fadeOut();
-                //  });
-
-                // $(document).ready(function () {
-                //     let itemsTable = $('#itemsTable').DataTable({
-                //         processing: true,
-                //         serverSide: true,
-                //         dom: 'Bfrtip',
-                //         buttons: ['copy', 'excel', 'pdf', 'print'],
-                //         pageLength: 25,
-                //         lengthChange: false,
-                //         ajax: {
-                //             url: '{{ route('admin.allticketsdata') }}',
-                //             data: function (d) {
-                //                 $('#itemsTable thead tr.filters th').each(function (i) {
-                //                     let val = $(this).find('input, select').val();
-                //                     if (val !== undefined) {
-                //                         d.columns[i].search.value = val;
-                //                     }
-                //                 });
-                //             }
-                //         },
-                //         columns: [
-                //             { data: 'serial', name: 'serial', orderable: false, searchable: false },
-                //             { data: 'id', name: 'id', orderable: false, searchable: false },
-                //             { data: 'custname', name: 'customers.username' },
-                //             { data: 'mobilenumber', name: 'ticket_customfields.values' },
-                //             { data: 'status', name: 'tickets.status' },
-                //             { data: 'assignedTo', name: 'assignedTo', orderable: false, searchable: false },
-                //             { data: 'action', name: 'action', orderable: false, searchable: false },
-                //         ],
-                //         order: [[2, 'asc']],
-                //         drawCallback: function (settings) {
-                //             let api = this.api();
-                //             let start = api.page.info().start;
-                //             api.column(0, { page: 'current' }).nodes().each(function (cell, i) {
-                //                 cell.innerHTML = start + i + 1;
-                //             });
-                //         }
-                //     });
-
-                //     // Filter when typing in column search fields
-                //     $('#itemsTable thead').on('keyup change', 'input', function () {
-                //         itemsTable.draw();
-                //     });
-
-                //     // Change page length
-                //     $('#rowCount').on('change', function () {
-                //         itemsTable.page.len($(this).val()).draw();
-                //     });
-
-                //     // Refresh button
-                //     $('#refreshdata').on('click', function (e) {
-                //         e.preventDefault();
-                //         $('#itemsTable thead tr.filters input').val('');
-                //         itemsTable.ajax.reload(null, true);
-                //     });
-
-                //     // Toggle column visibility
-                //     $('button.toggle-vis').on('click', function (e) {
-                //         e.preventDefault();
-                //         let column = itemsTable.column($(this).attr('data-column'));
-                //         column.visible(!column.visible());
-                //     });
-                // });
-$(document).ready(function () {
-    let itemsTable = $('#itemsTable').DataTable({
-        processing: true,
-        serverSide: true,
-        dom: 'Bfrtip',
-        buttons: ['copy', 'excel', 'pdf', 'print'],
-        pageLength: 25,
-        lengthChange: false,
-        ajax: {
-            url: '{{ route("admin.allticketsdata") }}',
-            data: function (d) {
-                $('#itemsTable thead tr.filters th').each(function (i) {
-                    let val = $(this).find('input, select').val();
-                    if (val !== undefined) {
-                        d.columns[i].search.value = val;
-                    }
-                });
-            }
-        },
-        columns: [
-            { data: 'serial', name: 'serial', orderable: false, searchable: false },
-            { data: 'id', name: 'id', orderable: false, searchable: false },
-            { data: 'custname', name: 'customers.username' },
-            { data: 'mobilenumber', name: 'ticket_customfields.values' },
-            { data: 'status', name: 'tickets.status' },
-            { data: 'assignedTo', name: 'assignedTo', orderable: false, searchable: false },
-            { data: 'action', name: 'action', orderable: false, searchable: false },
-        ],
-        order: [[2, 'asc']],
-        drawCallback: function (settings) {
-            let api = this.api();
-            let start = api.page.info().start;
-            api.column(0, { page: 'current' }).nodes().each(function (cell, i) {
-                cell.innerHTML = start + i + 1;
-            });
-        }
-    });
-
-    // Filter
-    $('#itemsTable thead').on('keyup change', 'input', function () {
-        itemsTable.draw();
-    });
-
-    // Refresh
-    $('#refreshdata').on('click', function (e) {
-        e.preventDefault();
-        $('#itemsTable thead tr.filters input').val('');
-        itemsTable.ajax.reload(null, true);
-    });
-
-    // Page length selector
-    $('#rowCount').on('change', function () {
-        itemsTable.page.len($(this).val()).draw();
-    });
-});
+                    // Auto Refresh Datatable js
+                    setInterval(function() {
+                        $('.sprukoloader-img').fadeIn();
+                        $('.dashboardtabledata').load('{{ route('admin.dashboardtabledata') }}', () => {
+                            $('.sprukoloader-img').fadeOut();
+                        });
 
 
 
 
-
-                @if (Auth::user()->usetting != null)
-                    @if (Auth::user()->usetting->ticket_refresh == 1)
-
-                        // Auto Refresh Datatable js
-                        setInterval(function() {
-                            e.preventDefault();;
-                            itemsTable.ajax.reload(null, true);
-                            // $('.sprukoloader-img').fadeIn();
-                            // $('.dashboardtabledata').load('{{ route('admin.dashboardtabledata') }}', ()=>{
-                            // 	$('.sprukoloader-img').fadeOut();
-                            // });
-
-                        }, 30000);
-                    @endif
+                    }, 30000);
                 @endif
+            @endif
 
-                // TICKET DELETE SCRIPT
-                $('body').on('click', '#show-delete', function() {
-                    var _id = $(this).data("id");
+            // csrf field
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+            $('.sprukoloader-img').fadeIn();
+
+            // // Datatable
+            $('.dashboardtabledata').load('{{ route('admin.dashboardtabledata') }}', () => {
+                $('.sprukoloader-img').fadeOut();
+            });
+
+            $('#refreshdata').on('click', function(e) {
+                e.preventDefault();
+                $('.sprukoloader-img').fadeIn();
+                $('.dashboardtabledata').load('{{ route('admin.dashboardtabledata') }}', () => {
+                    $('.sprukoloader-img').fadeOut();
+                });
+            })
+
+            // TICKET DELETE SCRIPT
+            $('body').on('click', '#show-delete', function() {
+                var _id = $(this).data("id");
+                swal({
+                        title: `{{ lang('Are you sure you want to continue?', 'alerts') }}`,
+                        text: "{{ lang('This might erase your records permanently', 'alerts') }}",
+                        icon: "warning",
+                        buttons: true,
+                        dangerMode: true,
+                    })
+                    .then((willDelete) => {
+                        if (willDelete) {
+                            $.ajax({
+                                type: "get",
+                                url: SITEURL + "/admin/delete-ticket/" + _id,
+                                success: function(data) {
+                                    toastr.success(data.success);
+                                    location.reload();
+                                },
+                                error: function(data) {
+                                    console.log('Error:', data);
+                                },
+                            });
+                        }
+                    });
+
+            });
+            // TICKET DELETE SCRIPT END
+
+            // when user click its get modal popup to assigned the ticket
+            /*$('body').on('click', '#assigned', function () {
+                                    					var assigned_id = $(this).data('id');
+
+
+                                    							// SweetAlert prompt to choose consultant type
+                                    							swal({
+                                    							title: "Select Consultant Type",
+                                    							content: {
+                                    							element: "select",
+                                    							attributes: {
+                                    							id: "consultantTypeSelect",
+                                    							className: "form-control",
+                                    							innerHTML: `
+							<option value="" disabled selected>Select type</option>
+							<option value="type1">Consultant Type 1</option>
+							<option value="type2">Consultant Type 2</option>
+							<option value="type3">Consultant Type 3</option>
+							`
+                                    							}
+                                    							},
+                                    							buttons: {
+                                    							cancel: "Cancel",
+                                    							confirm: {
+                                    							text: "Continue",
+                                    							closeModal: false
+                                    							}
+                                    							}
+                                    							}).then((confirm) => {
+                                    							if (!confirm) return;
+
+                                    							let selectedType = document.getElementById('consultantTypeSelect').value;
+
+                                    							if (!selectedType) {
+                                    							toastr.error('Please select a consultant type.');
+                                    							return;
+                                    							}
+
+
+                                    					$('.select2_modalassign').select2({
+                                    						dropdownParent: ".sprukosearch",
+                                    						minimumResultsForSearch: '',
+                                    						placeholder: "Search",
+                                    						width: '100%'
+                                    					});
+                                    					//$.get('admin/assigned/' + assigned_id , function (data) {
+                                    						$.get('admin/assigned/' + assigned_id + '?consultant_type=' + selectedType, function (data) {
+
+                                    						$('#AssignError').html('');
+                                    						$('#assigned_id').val(data.assign_data.id);
+                                    						$(".modal-title").text('{{ lang('Assign To Agent') }}');
+                                    						$('#username').html(data.table_data);
+                                    						$('#addassigned').modal('show');
+                                    						swal.close(); // Close the alert
+                                    		});
+                                    					});
+                                    				});*/
+            $('body').on('click', '#assigned', function() {
+                var assigned_id = $(this).data('id');
+
+                // Step 1: Fetch consultant types from the controller
+                $.get('admin/consultant-types', function(response) {
+                    let optionsHTML = response.options;
+
+                    // Step 2: Show SweetAlert with dynamically loaded consultant types
+                    swal({
+                        title: "Select Consultant Type",
+                        content: {
+                            element: "select",
+                            attributes: {
+                                id: "consultantTypeSelect",
+                                className: "form-control",
+                                innerHTML: optionsHTML
+                            }
+                        },
+                        buttons: {
+                            cancel: "Cancel",
+                            confirm: {
+                                text: "Continue",
+                                closeModal: false
+                            }
+                        }
+                    }).then((confirm) => {
+                        if (!confirm) return;
+
+                        let selectedType = document.getElementById('consultantTypeSelect')
+                            .value;
+                        alert(selectedType);
+                        if (!selectedType) {
+                            toastr.error('Please select a consultant type.');
+                            return;
+                        }
+
+                        // Step 3: Load the assignment modal via AJAX with selected type
+                        $.get('admin/assigned/' + assigned_id + '?consultant_type=' +
+                            selectedType,
+                            function(data) {
+                                $('#AssignError').html('');
+                                $('#assigned_id').val(data.assign_data.id);
+                                $(".modal-title").text('Assign To Agent');
+                                $('#username').html(data.table_data);
+
+                                $('.select2_modalassign').select2({
+                                    dropdownParent: ".sprukosearch",
+                                    minimumResultsForSearch: '',
+                                    placeholder: "Search",
+                                    width: '100%'
+                                });
+
+                                $('#addassigned').modal('show');
+                                swal.close(); // Close the alert
+                            });
+                    });
+                }).fail(function() {
+                    toastr.error('Failed to load consultant types.');
+                });
+            });
+
+
+            // Assigned Submit button
+            $('body').on('submit', '#assigned_form', function(e) {
+                e.preventDefault();
+                var actionType = $('#btnsave').val();
+                var fewSeconds = 2;
+                $('#btnsave').html('Sending..');
+                $('#btnsave').prop('disabled', true);
+                setTimeout(function() {
+                    $('#btnsave').prop('disabled', false);
+                }, fewSeconds * 1000);
+                var formData = new FormData(this);
+                $.ajax({
+                    type: 'POST',
+                    url: SITEURL + "/admin/assigned/create",
+                    data: formData,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+
+                    success: (data) => {
+
+                        $('#AssignError').html('');
+                        $('#assigned_form').trigger("reset");
+                        $('#addassigned').modal('hide');
+                        $('#btnsave').html('{{ lang('Save Changes') }}');
+                        location.reload();
+                        toastr.success(data.success);
+                    },
+                    error: function(data) {
+                        $('#AssignError').html('');
+                        $('#AssignError').html(data.responseJSON.errors.assigned_user_id);
+                        $('#btnsave').html('{{ lang('Save Changes') }}');
+                    }
+                });
+            });
+
+            // Remove the assigned from the ticket
+            $('body').on('click', '#btnremove', function() {
+                var asid = $(this).data("id");
+                swal({
+                        title: `{{ lang('Are you sure you want to unassign this agent?', 'alerts') }}`,
+                        text: "{{ lang('This agent may no longer exist for this ticket.', 'alerts') }}",
+                        icon: "warning",
+                        buttons: true,
+                        dangerMode: true,
+                    })
+                    .then((willDelete) => {
+                        if (willDelete) {
+
+                            $.ajax({
+                                type: "get",
+                                url: SITEURL + "/admin/assigned/update/" + asid,
+                                success: function(data) {
+                                    location.reload();
+                                    toastr.success(data.success);
+
+                                },
+                                error: function(data) {
+                                    console.log('Error:', data);
+                                }
+                            });
+
+                        }
+                    });
+            });
+
+            //Mass Delete
+            $('body').on('click', '#massdelete', function() {
+
+                var id = [];
+                $('.checkall:checked').each(function() {
+                    id.push($(this).val());
+                });
+                if (id.length > 0) {
                     swal({
                             title: `{{ lang('Are you sure you want to continue?', 'alerts') }}`,
                             text: "{{ lang('This might erase your records permanently', 'alerts') }}",
@@ -676,251 +995,87 @@ $(document).ready(function () {
                         .then((willDelete) => {
                             if (willDelete) {
                                 $.ajax({
-                                    type: "get",
-                                    url: SITEURL + "/admin/delete-ticket/" + _id,
-                                    success: function(data) {
-                                        toastr.success(data.success);
-                                        location.reload();
+                                    url: "{{ url('admin/ticket/delete/tickets') }}",
+                                    method: "GET",
+                                    data: {
+                                        id: id
                                     },
-                                    error: function(data) {
-                                        console.log('Error:', data);
-                                    },
-                                });
-                            }
-                        });
-
-                });
-                // TICKET DELETE SCRIPT END
-
-                // when user click its get modal popup to assigned the ticket
-                $('body').on('click', '#assigned', function() {
-                    var assigned_id = $(this).data('id');
-                    $('.select2_modalassign').select2({
-                        dropdownParent: ".sprukosearch",
-                        minimumResultsForSearch: '',
-                        placeholder: "Search",
-                        width: '100%'
-                    });
-                    $.get('admin/assigned/' + assigned_id, function(data) {
-                        $('#AssignError').html('');
-                        $('#assigned_id').val(data.assign_data.id);
-                        $(".modal-title").text('{{ lang('Assign To Agent') }}');
-                        $('#username').html(data.table_data);
-                        $('#addassigned').modal('show');
-                    });
-                });
-
-                // Assigned Submit button
-                $('body').on('submit', '#assigned_form', function(e) {
-                    e.preventDefault();
-                    var actionType = $('#btnsave').val();
-                    var fewSeconds = 2;
-                    $('#btnsave').html('Sending..');
-                    $('#btnsave').prop('disabled', true);
-                    setTimeout(function() {
-                        $('#btnsave').prop('disabled', false);
-                    }, fewSeconds * 1000);
-                    var formData = new FormData(this);
-                    $.ajax({
-                        type: 'POST',
-                        url: SITEURL + "/admin/assigned/create",
-                        data: formData,
-                        cache: false,
-                        contentType: false,
-                        processData: false,
-
-                        success: (data) => {
-
-                            $('#AssignError').html('');
-                            $('#assigned_form').trigger("reset");
-                            $('#addassigned').modal('hide');
-                            $('#btnsave').html('{{ lang('Save Changes') }}');
-                            $('#assigned').html('gfhffh');
-                            location.reload();
-                            toastr.success(data.success);
-                        },
-                        error: function(data) {
-                            $('#AssignError').html('');
-                            $('#AssignError').html(data.responseJSON.errors.assigned_user_id);
-                            $('#btnsave').html('{{ lang('Save Changes') }}');
-                        }
-                    });
-                });
-
-                // Remove the assigned from the ticket
-                $('body').on('click', '#btnremove', function() {
-                    var asid = $(this).data("id");
-                    swal({
-                            title: `{{ lang('Are you sure you want to unassign this agent?', 'alerts') }}`,
-                            text: "{{ lang('This agent may no longer exist for this ticket.', 'alerts') }}",
-                            icon: "warning",
-                            buttons: true,
-                            dangerMode: true,
-                        })
-                        .then((willDelete) => {
-                            if (willDelete) {
-
-                                $.ajax({
-                                    type: "get",
-                                    url: SITEURL + "/admin/assigned/update/" + asid,
                                     success: function(data) {
                                         location.reload();
                                         toastr.success(data.success);
 
                                     },
                                     error: function(data) {
-                                        console.log('Error:', data);
+
                                     }
                                 });
-
                             }
                         });
-                });
+                } else {
+                    toastr.error('{{ lang('Please select at least one check box.', 'alerts') }}');
+                }
 
-                //Mass Delete
-                $('body').on('click', '#massdelete', function() {
+            });
 
-                    var id = [];
-                    $('.checkall:checked').each(function() {
-                        id.push($(this).val());
-                    });
-                    if (id.length > 0) {
-                        swal({
-                                title: `{{ lang('Are you sure you want to continue?', 'alerts') }}`,
-                                text: "{{ lang('This might erase your records permanently', 'alerts') }}",
-                                icon: "warning",
-                                buttons: true,
-                                dangerMode: true,
-                            })
-                            .then((willDelete) => {
-                                if (willDelete) {
-                                    $.ajax({
-                                        url: "{{ url('admin/ticket/delete/tickets') }}",
-                                        method: "GET",
-                                        data: {
-                                            id: id
-                                        },
-                                        success: function(data) {
-                                            location.reload();
-                                            toastr.success(data.success);
+            $('#supportticket-dashe').dataTable();
 
-                                        },
-                                        error: function(data) {
+            $('.form-select').select2({
+                minimumResultsForSearch: Infinity,
+                width: '100%'
+            });
 
-                                        }
-                                    });
-                                }
-                            });
-                    } else {
-                        toastr.error('{{ lang('Please select at least one check box.', 'alerts') }}');
-                    }
+            $('#customCheckAll').prop('checked', false);
+            $('.checkall').on('click', function() {
+                if ($('.checkall:checked').length == $('.checkall').length) {
+                    $('#customCheckAll').prop('checked', true);
+                } else {
+                    $('#customCheckAll').prop('checked', false);
+                }
+            });
 
-                });
+            // Checkbox checkall
+            $('#customCheckAll').on('click', function() {
+                $('.checkall').prop('checked', this.checked);
+            });
 
-                // $('#supportticket-dashe').dataTable({
+            $('body').on('click', '#selfassigid', function(e) {
 
-                // 	language: {
-                // 		searchPlaceholder: search,
-                // 		sSearch: '',
+                e.preventDefault();
 
-                // 	},
-                // 	order:[],
-                // 	columnDefs: [
-                // 		{ "orderable": false, "targets":[ 0,1,6] }
-                // 	],
-                // });
+                let id = $(this).data('id');
 
-                let prev = {!! json_encode(lang('Previous')) !!};
-                let next = {!! json_encode(lang('Next')) !!};
-                let nodata = {!! json_encode(lang('No data available in table')) !!};
-                let noentries = {!! json_encode(lang('No entries to show')) !!};
-                let showing = {!! json_encode(lang('showing page')) !!};
-                let ofval = {!! json_encode(lang('of')) !!};
-                let maxRecordfilter = {!! json_encode(lang('- filtered from ')) !!};
-                let maxRecords = {!! json_encode(lang('records')) !!};
-                let entries = {!! json_encode(lang('entries')) !!};
-                let show = {!! json_encode(lang('Show')) !!};
-                let search = {!! json_encode(lang('Search...')) !!};
-                // Datatable
-                $('#supportticket-dashe').dataTable({
-                    language: {
-                        searchPlaceholder: search,
-                        scrollX: "100%",
-                        sSearch: '',
-                        paginate: {
-                            previous: prev,
-                            next: next
-                        },
-                        emptyTable: nodata,
-                        infoFiltered: `${maxRecordfilter} _MAX_ ${maxRecords}`,
-                        info: `${showing} _PAGE_ ${ofval} _PAGES_`,
-                        infoEmpty: noentries,
-                        lengthMenu: `${show} _MENU_ ${entries} `,
+                $.ajax({
+                    method: 'POST',
+                    url: '{{ route('admin.selfassign') }}',
+                    data: {
+                        id: id,
                     },
-                    order: [],
-                    columnDefs: [{
-                        "orderable": false,
-                        "targets": [0, 1, 4]
-                    }],
-                });
+                    success: (data) => {
+                        toastr.success(data.success);
+                        location.reload();
+                    },
+                    error: function(data) {
 
-                $('.form-select').select2({
-                    minimumResultsForSearch: Infinity,
-                    width: '100%'
-                });
-
-                $('#customCheckAll').prop('checked', false);
-                $('.checkall').on('click', function() {
-                    if ($('.checkall:checked').length == $('.checkall').length) {
-                        $('#customCheckAll').prop('checked', true);
-                    } else {
-                        $('#customCheckAll').prop('checked', false);
                     }
                 });
+            })
 
-                // Checkbox checkall
-                $('#customCheckAll').on('click', function() {
-                    $('.checkall').prop('checked', this.checked);
-                });
+            $(".vertical-scroll5").bootstrapNews({
+                newsPerPage: 1,
+                autoplay: true,
+                pauseOnHover: true,
+                navigation: false,
+                direction: 'down',
+                newsTickerInterval: 2500,
+                onToDo: function() {
+                    //console.log(this);
+                }
+            });
 
-                $('body').on('click', '#selfassigid', function(e) {
+        })(jQuery);
+    </script>
+@endsection
 
-                    e.preventDefault();
-
-                    let id = $(this).data('id');
-
-                    $.ajax({
-                        method: 'POST',
-                        url: '{{ route('admin.selfassign') }}',
-                        data: {
-                            id: id,
-                        },
-                        success: (data) => {
-                            toastr.success(data.success);
-                            location.reload();
-                        },
-                        error: function(data) {
-
-                        }
-                    });
-                })
-
-                $(".vertical-scroll5").bootstrapNews({
-                    newsPerPage: 1,
-                    autoplay: true,
-                    pauseOnHover: true,
-                    navigation: false,
-                    direction: 'down',
-                    newsTickerInterval: 2500,
-                    onToDo: function() {
-                        //console.log(this);
-                    }
-                });
-
-            })(jQuery);
-        </script>
-    @endsection
-
-    @section('modal')
-        @include('admin.modalpopup.assignmodal')
-    @endsection
+@section('modal')
+    @include('admin.modalpopup.assignmodal')
+@endsection
